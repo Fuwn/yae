@@ -179,7 +179,9 @@ func fetchSHA256(uri string, unpack bool) (string, error) {
 }
 
 func commandOutput(name string, args ...string) (string, error) {
-	cmd := exec.Command(name, args...)
+	executable, err := exec.LookPath(name)
+
+	cmd := exec.Command(executable, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
