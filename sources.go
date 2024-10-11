@@ -9,9 +9,13 @@ import (
 type Sources map[string]Source
 
 type Source struct {
-	URI    string `json:"url"`
-	SHA256 string `json:"sha256"`
-	Unpack bool   `json:"unpack"`
+	URI          string `json:"url"`
+	SHA256       string `json:"sha256"`
+	Unpack       bool   `json:"unpack"`
+	Type         string `json:"type"`
+	Version      string `json:"version,omitempty"`
+	URITemplate  string `json:"uri_template,omitempty"`
+	TagPredicate string `json:"tag_predicate,omitempty"`
 }
 
 func (s *Sources) EnsureLoaded() error {
