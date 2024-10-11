@@ -58,6 +58,7 @@
               src = pkgs.lib.cleanSource ./.;
               vendorHash = "sha256-mN/QjzJ4eGfbW1H92cCKvC0wDhCR6IUes2HCZ5YBdPA=";
               buildInputs = [ pkgs.musl ];
+              propagatedBuildInputs = [ pkgs.gitMinimal ];
 
               ldflags = [
                 "-s"
