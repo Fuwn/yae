@@ -1,4 +1,4 @@
-module github.com/Fuwn/wiene
+module github.com/Fuwn/yae
 
 go 1.22.7
 

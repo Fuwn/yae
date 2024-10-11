@@ -14,7 +14,7 @@ func main() {
 	sources := Sources{}
 
 	(&cli.App{
-		Name:                 "wiene",
+		Name:                 "yae",
 		Usage:                "Nix Dependency Manager",
 		Description:          "Nix Dependency Manager",
 		EnableBashCompletion: true,
@@ -30,7 +30,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "sources",
-				Value: "./wiene.json",
+				Value: "./yae.json",
 				Usage: "Sources path",
 			},
 		},
