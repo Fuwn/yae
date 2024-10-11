@@ -333,7 +333,7 @@ func updateSource(sources *Sources, name string, source Source, show bool, force
 			return updated, err
 		}
 
-		if tag != source.Version || force {
+		if tag != source.Version || force || source.Force {
 			if show {
 				fmt.Println("updated version for", name, "from", source.Version, "to", tag)
 			}
