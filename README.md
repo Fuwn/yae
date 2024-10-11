@@ -13,9 +13,71 @@ You can try out Yae without installing anything permanently by running
 Additionally, [Tsutsumi](https://github.com/Fuwn/tsutsumi) uses Yae to manage
 dependencies. You can check out a working implementation there.
 
+## Usage
+
+View the [installations instructions](#installation) below to set up Yae after
+running `yae init`.
+
+```sh
+# Initialises a Yae environment in the current directory by creating an empty `yae.json`
+# file
+yae init
+
+# Adds a Yae dependency named `zen-browser-twilight-bin` using a floating tag
+# (tag always remain `twilight`, but may receive frequent hash changes)
+yae add \
+  --type binary \
+  --version twilight \
+  --unpack \
+  zen-browser-twilight-bin \
+  'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
+
+# Adds a Yae dependency named `zen-browser-bin` pinned at tag `1.0.1-a.7`
+yae add \
+  --type git \
+  --version 1.0.1-a.7 \
+  --unpack \
+  zen-browser-bin \
+  'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
+
+# Updates all dependencies, e.g., updates the hash of `zen-browser-twilight-bin`
+# and bumps the version of `zen-browser-bin` to `1.0.1-a.8`, handling URI and
+# hash recalculations
+yae update
+
+# Only updates `zen-browser-twilight-bin`
+yae update zen-browser-twilight-bin
+```
+
 ## Installation
 
-Follow the installation instructions at [Tsutsumi](https://github.com/Fuwn/tsutsumi).
+Follow the installation instructions at [Tsutsumi](https://github.com/Fuwn/tsutsumi),
+which provides both flake and flake-less installation options.
+
+Alternatively, without flake-less support, install the
+`inputs.yae.packages.${pkgs.system}.yae` package exposed by this flake.
+
+### Nix
+
+To add Yae support to your Nix expression after running `yae init`, just read
+from the Yae environment file.
+
+Here's an example taken from [Tsutsumi's zen-browser-bin package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix).
+
+```nix
+# pkgs/zen-browser-bin.nix
+
+{
+  pkgs,
+  self,
+  yae ? builtins.fromJSON (builtins.readFile "${self}/yae.json"),
+}:
+import "${self}/lib/zen-browser-bin.nix" {
+  # Effortless dependency updates just by running `yae update` from CI using a
+  # CRON job
+  inherit (yae.zen-browser-bin) sha256 version;
+} { inherit pkgs; }
+```
 
 ## `--help`
 
