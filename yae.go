@@ -165,9 +165,13 @@ func main() {
 						Name:  "show-updated-only",
 						Usage: "Output a newline-seperated list of updated sources, silence other output",
 					},
+					&cli.BoolFlag{
+						Name:  "show-updated-only-formatted",
+						Usage: "Output a comma and/or ampersand list of updated sources, silence other output",
+					},
 				},
 				Action: func(c *cli.Context) error {
-					showAll := !c.Bool("show-updated-only")
+					showAll := !c.Bool("show-updated-only") && !c.Bool("show-updated-only-formatted")
 					updates := []string{}
 
 					if c.Args().Len() == 0 {
@@ -192,10 +196,12 @@ func main() {
 						return err
 					}
 
-					if !showAll {
+					if c.Bool("show-updated-only") {
 						for _, update := range updates {
 							fmt.Println(update)
 						}
+					} else if c.Bool("show-updated-only-formatted") {
+						fmt.Println(lister(updates))
 					}
 
 					return nil
@@ -319,4 +325,16 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 	(*sources)[name] = source
 
 	return updated, nil
+}
+
+func lister(items []string) string {
+	if len(items) == 0 {
+		return ""
+	} else if len(items) == 1 {
+		return items[0]
+	} else if len(items) == 2 {
+		return fmt.Sprintf("%s & %s", items[0], items[1])
+	}
+
+	return fmt.Sprintf("%s, & %s", strings.Join(items[:len(items)-1], ", "), items[len(items)-1])
 }
