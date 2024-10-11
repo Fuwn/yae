@@ -9,12 +9,12 @@ import (
 type Sources map[string]Source
 
 type Source struct {
-	URI           string `json:"url"`
+	URL           string `json:"url"`
 	SHA256        string `json:"sha256"`
 	Unpack        bool   `json:"unpack"`
 	Type          string `json:"type"`
 	Version       string `json:"version,omitempty"`
-	URITemplate   string `json:"uri_template,omitempty"`
+	URLTemplate   string `json:"url_template,omitempty"`
 	TagPredicate  string `json:"tag_predicate,omitempty"`
 	TrimTagPrefix string `json:"trim_tag_prefix,omitempty"`
 	Pinned        bool   `json:"pinned,omitempty"`

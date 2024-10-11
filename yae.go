@@ -61,7 +61,7 @@ func main() {
 			{
 				Name:      "add",
 				Args:      true,
-				ArgsUsage: "<name> <uri>",
+				ArgsUsage: "<name> <url>",
 				Usage:     "Add a source",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -118,14 +118,14 @@ func main() {
 					version := c.String("version")
 
 					if version != "" {
-						source.URITemplate = c.Args().Get(1)
+						source.URLTemplate = c.Args().Get(1)
 						source.Version = c.String("version")
 
-						if strings.Contains(source.URITemplate, "{version}") {
-							source.URI = strings.ReplaceAll(source.URITemplate, "{version}", source.Version)
+						if strings.Contains(source.URLTemplate, "{version}") {
+							source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 						}
 					} else {
-						source.URI = c.Args().Get(1)
+						source.URL = c.Args().Get(1)
 					}
 
 					if source.Type == "git" && c.String("tag-predicate") != "" {
@@ -140,7 +140,7 @@ func main() {
 						source.Pinned = true
 					}
 
-					if sha256, err := fetchSHA256(source.URI, c.Bool("unpack"), !c.Bool("silent")); err != nil {
+					if sha256, err := fetchSHA256(source.URL, c.Bool("unpack"), !c.Bool("silent")); err != nil {
 						return err
 					} else {
 						source.SHA256 = sha256
@@ -230,8 +230,8 @@ func main() {
 	}
 }
 
-func fetchSHA256(uri string, unpack bool, show bool) (string, error) {
-	arguments := []string{"--type", "sha256", uri}
+func fetchSHA256(url string, unpack bool, show bool) (string, error) {
+	arguments := []string{"--type", "sha256", url}
 
 	if unpack {
 		arguments = append([]string{"--unpack"}, arguments...)
@@ -267,7 +267,7 @@ func command(name string, show bool, args ...string) (string, error) {
 
 func fetchLatestGitTag(source Source, show bool) (string, error) {
 	if source.Type == "git" {
-		repository := "https://github.com/" + strings.Split(source.URI, "/")[3] + "/" + strings.Split(source.URI, "/")[4]
+		repository := "https://github.com/" + strings.Split(source.URL, "/")[3] + "/" + strings.Split(source.URL, "/")[4]
 		remotes, err := command("bash", show, "-c", fmt.Sprintf("git ls-remote --tags %s | awk -F'/' '{print $NF}' | sort -V", repository))
 
 		if err != nil {
@@ -329,13 +329,13 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 			source.Version = tag
 			updated = true
 
-			if strings.Contains(source.URITemplate, "{version}") {
-				source.URI = strings.ReplaceAll(source.URITemplate, "{version}", source.Version)
+			if strings.Contains(source.URLTemplate, "{version}") {
+				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 			}
 		}
 	}
 
-	sha256, err := fetchSHA256(source.URI, source.Unpack, show)
+	sha256, err := fetchSHA256(source.URL, source.Unpack, show)
 
 	if err != nil {
 		return updated, err
