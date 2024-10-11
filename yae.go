@@ -263,6 +263,10 @@ func fetchLatestGitTag(source Source, show bool) (string, error) {
 
 		if source.TagPredicate == "" {
 			latest = refs[len(refs)-2]
+
+			if strings.Contains(latest, "refs/tags/") {
+				latest = strings.Split(latest, "/")[2]
+			}
 		} else {
 			for i := len(refs) - 2; i >= 0; i-- {
 				if strings.Contains(refs[i], source.TagPredicate) {
