@@ -17,6 +17,7 @@ type Source struct {
 	URITemplate   string `json:"uri_template,omitempty"`
 	TagPredicate  string `json:"tag_predicate,omitempty"`
 	TrimTagPrefix string `json:"trim_tag_prefix,omitempty"`
+	Pinned        bool   `json:"pinned,omitempty"`
 }
 
 func (s *Sources) EnsureLoaded() error {
