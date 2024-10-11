@@ -114,7 +114,7 @@ func main() {
 						source.Version = c.String("version")
 
 						if strings.Contains(source.URITemplate, "{version}") {
-							source.URI = strings.Replace(source.URITemplate, "{version}", source.Version, 1)
+							source.URI = strings.ReplaceAll(source.URITemplate, "{version}", source.Version)
 						}
 					} else {
 						source.URI = c.Args().Get(1)
@@ -302,7 +302,7 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 			updated = true
 
 			if strings.Contains(source.URITemplate, "{version}") {
-				source.URI = strings.Replace(source.URITemplate, "{version}", source.Version, 1)
+				source.URI = strings.ReplaceAll(source.URITemplate, "{version}", source.Version)
 			}
 		}
 	}
