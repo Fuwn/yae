@@ -28,6 +28,7 @@ AUTHOR:
    Fuwn <contact@fuwn.me>
 
 COMMANDS:
+   init     Initialise a new Yae environment
    add      Add a source
    drop     Drop a source
    update   Update one or all sources
