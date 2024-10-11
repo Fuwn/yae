@@ -66,6 +66,7 @@ func main() {
 					&cli.BoolFlag{
 						Name:  "unpack",
 						Usage: "Unpack the source into the Nix Store",
+						Value: true,
 					},
 				},
 				Action: func(c *cli.Context) error {
