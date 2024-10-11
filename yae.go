@@ -280,7 +280,7 @@ func command(name string, show bool, args ...string) (string, error) {
 func fetchLatestGitTag(source Source, show bool) (string, error) {
 	if source.Type == "git" {
 		repository := "https://github.com/" + strings.Split(source.URL, "/")[3] + "/" + strings.Split(source.URL, "/")[4]
-		remotes, err := command("bash", show, "-c", fmt.Sprintf("git ls-remote --tags %s | awk -F'/' '{print $NF}' | sort -V", repository))
+		remotes, err := command("bash", show, "-c", fmt.Sprintf("git ls-remote %s | awk -F'/' '{print $NF}' | sort -V", repository))
 
 		if err != nil {
 			return "", err
