@@ -101,6 +101,10 @@ func main() {
 						Name:  "pin",
 						Usage: "Prevent the source from being updated",
 					},
+					&cli.BoolFlag{
+						Name:  "force",
+						Usage: "Always force update the source, regardless of unchanged remote tag",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
@@ -138,6 +142,14 @@ func main() {
 
 					if c.Bool("pin") {
 						source.Pinned = true
+					}
+
+					if c.Bool("force") {
+						if source.Pinned {
+							return fmt.Errorf("cannot set a source to be statically forced and pinned at the same time")
+						}
+
+						source.Force = true
 					}
 
 					if sha256, err := fetchSHA256(source.URL, c.Bool("unpack"), !c.Bool("silent")); err != nil {
