@@ -5,8 +5,13 @@ and [`npins`](https://github.com/andir/npins/).
 
 I made it to solve my own problems, but I hope it can help you too.
 
-Try it out without installing anything permanently by running
-`nix run github:Fuwn/yae`!
+## Introduction
+
+You can try out Yae without installing anything permanently by running
+`nix run github:Fuwn/yae`.
+
+Additionally, [Tsutsumi](https://github.com/Fuwn/tsutsumi) uses Yae to manage
+dependencies. You can check out a working implementation there.
 
 ## Installation
 
