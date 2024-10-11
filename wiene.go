@@ -43,6 +43,61 @@ func main() {
 		Suggest: true,
 		Commands: []*cli.Command{
 			{
+				Name:      "add",
+				Args:      true,
+				ArgsUsage: "<name> <uri>",
+				Usage:     "Add a source",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "unpack",
+						Usage: "Unpack the source into the Nix Store",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					if c.Args().Len() != 2 {
+						return fmt.Errorf("invalid number of arguments")
+					}
+
+					if sources.Exists(c.Args().Get(0)) {
+						return fmt.Errorf("source already exists")
+					}
+
+					sha256, err := fetchSHA256(c.Args().Get(1), c.Bool("unpack"))
+
+					if err != nil {
+						return err
+					}
+
+					if err = sources.Add(c.Args().Get(0), Source{
+						Url:    c.Args().Get(1),
+						SHA256: sha256,
+						Unpack: c.Bool("unpack"),
+					}); err != nil {
+						return err
+					}
+
+					return sources.Save(c.String("sources"))
+				},
+			},
+			{
+				Name:  "drop",
+				Args:  true,
+				Usage: "Drop a source",
+				Action: func(c *cli.Context) error {
+					if c.Args().Len() == 0 {
+						return fmt.Errorf("invalid number of arguments")
+					}
+
+					if !sources.Exists(c.Args().Get(0)) {
+						return fmt.Errorf("source does not exist")
+					}
+
+					sources.Drop(c.Args().Get(0))
+
+					return sources.Save(c.String("sources"))
+				},
+			},
+			{
 				Name:      "update",
 				Args:      true,
 				Usage:     "Update one or all sources",
@@ -99,61 +154,6 @@ func main() {
 					}
 
 					return nil
-				},
-			},
-			{
-				Name:  "drop",
-				Args:  true,
-				Usage: "Drop a source",
-				Action: func(c *cli.Context) error {
-					if c.Args().Len() == 0 {
-						return fmt.Errorf("invalid number of arguments")
-					}
-
-					if !sources.Exists(c.Args().Get(0)) {
-						return fmt.Errorf("source does not exist")
-					}
-
-					sources.Drop(c.Args().Get(0))
-
-					return sources.Save(c.String("sources"))
-				},
-			},
-			{
-				Name:      "add",
-				Args:      true,
-				ArgsUsage: "<name> <uri>",
-				Usage:     "Add a source",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "unpack",
-						Usage: "Unpack the source into the Nix Store",
-					},
-				},
-				Action: func(c *cli.Context) error {
-					if c.Args().Len() != 2 {
-						return fmt.Errorf("invalid number of arguments")
-					}
-
-					if sources.Exists(c.Args().Get(0)) {
-						return fmt.Errorf("source already exists")
-					}
-
-					sha256, err := fetchSHA256(c.Args().Get(1), c.Bool("unpack"))
-
-					if err != nil {
-						return err
-					}
-
-					if err = sources.Add(c.Args().Get(0), Source{
-						Url:    c.Args().Get(1),
-						SHA256: sha256,
-						Unpack: c.Bool("unpack"),
-					}); err != nil {
-						return err
-					}
-
-					return sources.Save(c.String("sources"))
 				},
 			},
 		},

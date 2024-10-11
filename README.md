@@ -28,9 +28,9 @@ AUTHOR:
    Fuwn <contact@fuwn.me>
 
 COMMANDS:
-   update   Update one or all sources
-   drop     Drop a source
    add      Add a source
+   drop     Drop a source
+   update   Update one or all sources
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
