@@ -37,7 +37,7 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        name = "wiene";
+        name = "yae";
 
         meta = with pkgs.lib; {
           description = "Nix Dependency Manager";
@@ -48,7 +48,7 @@
           platforms = platforms.linux;
         };
 
-        wiene =
+        yae =
           pkgs.buildGo122Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
             rec {
               inherit meta;
@@ -71,7 +71,7 @@
       in
       {
         packages = {
-          default = wiene;
+          default = yae;
           ${name} = self.packages.${system}.default;
         };
 
