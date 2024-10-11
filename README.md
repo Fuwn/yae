@@ -62,7 +62,7 @@ Alternatively, without flake-less support, install the
 To add Yae support to your Nix expression after running `yae init`, just read
 from the Yae environment file.
 
-Here's an example taken from [Tsutsumi's zen-browser-bin package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix).
+Here's an example taken from [Tsutsumi's `zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix).
 
 ```nix
 # pkgs/zen-browser-bin.nix
