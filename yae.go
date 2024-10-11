@@ -208,8 +208,10 @@ func main() {
 						}
 					}
 
-					if err := sources.Save(c.String("sources")); err != nil {
-						return err
+					if len(updates) > 0 {
+						if err := sources.Save(c.String("sources")); err != nil {
+							return err
+						}
 					}
 
 					if c.Bool("show-updated-only") {
