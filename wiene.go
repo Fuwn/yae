@@ -69,7 +69,7 @@ func main() {
 					}
 
 					if err = sources.Add(c.Args().Get(0), Source{
-						Url:    c.Args().Get(1),
+						URI:    c.Args().Get(1),
 						SHA256: sha256,
 						Unpack: c.Bool("unpack"),
 					}); err != nil {
@@ -111,7 +111,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() == 0 {
 						for key, value := range sources {
-							sha256, err := fetchSHA256(value.Url, value.Unpack)
+							sha256, err := fetchSHA256(value.URI, value.Unpack)
 
 							if err != nil {
 								return err
@@ -119,7 +119,7 @@ func main() {
 
 							if sha256 != value.SHA256 {
 								sources[key] = Source{
-									Url:    value.Url,
+									URI:    value.URI,
 									SHA256: sha256,
 									Unpack: value.Unpack,
 								}
@@ -136,14 +136,14 @@ func main() {
 							return fmt.Errorf("source does not exist")
 						}
 
-						sha256, err := fetchSHA256(sources[c.Args().Get(0)].Url, c.Bool("unpack"))
+						sha256, err := fetchSHA256(sources[c.Args().Get(0)].URI, c.Bool("unpack"))
 
 						if err != nil {
 							return err
 						}
 
 						sources[c.Args().Get(0)] = Source{
-							Url:    sources[c.Args().Get(0)].Url,
+							URI:    sources[c.Args().Get(0)].URI,
 							SHA256: sha256,
 							Unpack: c.Bool("unpack"),
 						}
