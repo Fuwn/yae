@@ -185,14 +185,19 @@ func main() {
 						Name:  "show-updated-only-formatted",
 						Usage: "Output a comma and/or ampersand list of updated sources, silence other output",
 					},
+					&cli.BoolFlag{
+						Name:  "force-hashed",
+						Usage: "Force updates to non-pinned sources that have an unchanged version (recalculate hash)",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					showAll := !c.Bool("show-updated-only") && !c.Bool("show-updated-only-formatted")
 					updates := []string{}
+					force := c.Bool("force-hashed")
 
 					if c.Args().Len() == 0 {
 						for name, value := range sources {
-							if updated, err := updateSource(&sources, name, value, showAll); err != nil {
+							if updated, err := updateSource(&sources, name, value, showAll, force); err != nil {
 								return err
 							} else if updated {
 								updates = append(updates, name)
@@ -201,7 +206,7 @@ func main() {
 					} else {
 						name := c.Args().Get(0)
 
-						if updated, err := updateSource(&sources, name, sources[name], showAll); err != nil {
+						if updated, err := updateSource(&sources, name, sources[name], showAll, force); err != nil {
 							return err
 						} else if updated {
 							updates = append(updates, name)
@@ -301,7 +306,7 @@ func fetchLatestGitTag(source Source, show bool) (string, error) {
 	return "", fmt.Errorf("source is not a git repository")
 }
 
-func updateSource(sources *Sources, name string, source Source, show bool) (bool, error) {
+func updateSource(sources *Sources, name string, source Source, show bool, force bool) (bool, error) {
 	updated := false
 
 	if !sources.Exists(name) {
@@ -323,7 +328,7 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 			return updated, err
 		}
 
-		if tag != source.Version {
+		if tag != source.Version || force {
 			if show {
 				fmt.Println("updated version for", name, "from", source.Version, "to", tag)
 			}
@@ -334,6 +339,12 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 			if strings.Contains(source.URLTemplate, "{version}") {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 			}
+		} else {
+			if show {
+				fmt.Println("skipped update for", name, "because the version is unchanged")
+			}
+
+			return updated, nil
 		}
 	}
 
