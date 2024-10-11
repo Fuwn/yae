@@ -97,6 +97,10 @@ func main() {
 						Name:  "trim-tag-prefix",
 						Usage: "A prefix to trim from remote git tags",
 					},
+					&cli.BoolFlag{
+						Name:  "pin",
+						Usage: "Prevent the source from being updated",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
@@ -130,6 +134,10 @@ func main() {
 
 					if c.String("trim-tag-prefix") != "" {
 						source.TrimTagPrefix = c.String("trim-tag-prefix")
+					}
+
+					if c.Bool("pin") {
+						source.Pinned = true
 					}
 
 					if sha256, err := fetchSHA256(source.URI, c.Bool("unpack"), !c.Bool("silent")); err != nil {
@@ -296,6 +304,14 @@ func updateSource(sources *Sources, name string, source Source, show bool) (bool
 
 	if !sources.Exists(name) {
 		return updated, fmt.Errorf("source does not exist")
+	}
+
+	if source.Pinned {
+		if show {
+			fmt.Println("skipped update for", name, "because it is pinned")
+		}
+
+		return updated, nil
 	}
 
 	if source.Type == "git" {
