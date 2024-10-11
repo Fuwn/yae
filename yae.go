@@ -156,12 +156,6 @@ func main() {
 				Args:      true,
 				Usage:     "Update one or all sources",
 				ArgsUsage: "[name]",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "unpack",
-						Usage: "Unpack the source into the Nix Store",
-					},
-				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() == 0 {
 						for key, value := range sources {
