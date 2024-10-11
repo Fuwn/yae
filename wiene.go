@@ -30,7 +30,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "sources",
-				Value: "./sources.json",
+				Value: "./wiene.json",
 				Usage: "Sources path",
 			},
 		},

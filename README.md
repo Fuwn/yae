@@ -34,7 +34,7 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --sources value  Sources path (default: "./sources.json")
+   --sources value  Sources path (default: "./wiene.json")
    --help, -h       show help
 
 COPYRIGHT:
