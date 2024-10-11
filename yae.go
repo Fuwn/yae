@@ -25,6 +25,10 @@ func main() {
 			},
 		},
 		Before: func(c *cli.Context) error {
+			if args := c.Args(); args.Len() == 1 && args.Get(0) == "init" {
+				return nil
+			}
+
 			return sources.Load(c.String("sources"))
 		},
 		Flags: []cli.Flag{
@@ -42,6 +46,17 @@ func main() {
 		},
 		Suggest: true,
 		Commands: []*cli.Command{
+			{
+				Name:  "init",
+				Usage: "Initialise a new Yae environment",
+				Action: func(c *cli.Context) error {
+					if _, err := os.Stat(c.String("sources")); err == nil {
+						return fmt.Errorf("sources file already exists")
+					}
+
+					return sources.Save(c.String("sources"))
+				},
+			},
 			{
 				Name:      "add",
 				Args:      true,
