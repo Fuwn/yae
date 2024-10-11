@@ -93,6 +93,10 @@ func main() {
 						Name:  "silent",
 						Usage: "Silence output",
 					},
+					&cli.StringFlag{
+						Name:  "trim-tag-prefix",
+						Usage: "A prefix to trim from remote git tags",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
@@ -122,6 +126,10 @@ func main() {
 
 					if source.Type == "git" && c.String("tag-predicate") != "" {
 						source.TagPredicate = c.String("tag-predicate")
+					}
+
+					if c.String("trim-tag-prefix") != "" {
+						source.TrimTagPrefix = c.String("trim-tag-prefix")
 					}
 
 					if sha256, err := fetchSHA256(source.URI, c.Bool("unpack"), !c.Bool("silent")); err != nil {
@@ -271,6 +279,10 @@ func fetchLatestGitTag(source Source, show bool) (string, error) {
 					break
 				}
 			}
+		}
+
+		if source.TrimTagPrefix != "" {
+			latest = strings.TrimPrefix(latest, source.TrimTagPrefix)
 		}
 
 		return latest, nil
