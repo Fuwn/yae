@@ -50,7 +50,7 @@ yae add \
   'https://github.com/yaakapp/app/releases/download/v{version}/yaak_{version}_amd64.AppImage.tar.gz'
 
 # Updates all dependencies, e.g., updates the hash of `zen-browser-twilight-bin`
-# and bumps the version of `zen-browser-bin` to `1.0.1-a.8`, handling URI and
+# and bumps the version of `zen-browser-bin` to `1.0.1-a.8`, handling URL and
 # hash recalculations, etc.
 yae update
 
