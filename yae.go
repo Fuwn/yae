@@ -89,6 +89,10 @@ func main() {
 						Name:  "tag-predicate",
 						Usage: "Git tag predicate used in identifying latest git source",
 					},
+					&cli.BoolFlag{
+						Name:  "silent",
+						Usage: "Silence output",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
@@ -120,7 +124,7 @@ func main() {
 						source.TagPredicate = c.String("tag-predicate")
 					}
 
-					if sha256, err := fetchSHA256(source.URI, c.Bool("unpack")); err != nil {
+					if sha256, err := fetchSHA256(source.URI, c.Bool("unpack"), !c.Bool("silent")); err != nil {
 						return err
 					} else {
 						source.SHA256 = sha256
@@ -156,23 +160,42 @@ func main() {
 				Args:      true,
 				Usage:     "Update one or all sources",
 				ArgsUsage: "[name]",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "show-updated-only",
+						Usage: "Output a newline-seperated list of updated sources, silence other output",
+					},
+				},
 				Action: func(c *cli.Context) error {
+					showAll := !c.Bool("show-updated-only")
+					updates := []string{}
+
 					if c.Args().Len() == 0 {
-						for key, value := range sources {
-							if err := updateSource(&sources, key, value); err != nil {
+						for name, value := range sources {
+							if updated, err := updateSource(&sources, name, value, showAll); err != nil {
 								return err
+							} else if updated {
+								updates = append(updates, name)
 							}
 						}
 					} else {
 						name := c.Args().Get(0)
 
-						if err := updateSource(&sources, name, sources[name]); err != nil {
+						if updated, err := updateSource(&sources, name, sources[name], showAll); err != nil {
 							return err
+						} else if updated {
+							updates = append(updates, name)
 						}
 					}
 
 					if err := sources.Save(c.String("sources")); err != nil {
 						return err
+					}
+
+					if !showAll {
+						for _, update := range updates {
+							fmt.Println(update)
+						}
 					}
 
 					return nil
@@ -185,14 +208,14 @@ func main() {
 	}
 }
 
-func fetchSHA256(uri string, unpack bool) (string, error) {
+func fetchSHA256(uri string, unpack bool, show bool) (string, error) {
 	arguments := []string{"--type", "sha256", uri}
 
 	if unpack {
 		arguments = append([]string{"--unpack"}, arguments...)
 	}
 
-	output, err := commandOutput("nix-prefetch-url", arguments...)
+	output, err := command("nix-prefetch-url", show, arguments...)
 
 	if err != nil {
 		return "", err
@@ -203,21 +226,27 @@ func fetchSHA256(uri string, unpack bool) (string, error) {
 	return strings.Trim(lines[len(lines)-2], "\n"), nil
 }
 
-func commandOutput(name string, args ...string) (string, error) {
+func command(name string, show bool, args ...string) (string, error) {
 	executable, err := exec.LookPath(name)
+	out := []byte{}
 
-	cmd := exec.Command(executable, args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	out, err := cmd.Output()
+	if show {
+		cmd := exec.Command(executable, args...)
+		cmd.Stdin = os.Stdin
+		cmd.Stderr = os.Stderr
+		out, err = cmd.Output()
+	} else {
+		cmd := exec.Command(executable, args...)
+		out, err = cmd.Output()
+	}
 
 	return string(out), err
 }
 
-func fetchLatestGitTag(source Source) (string, error) {
+func fetchLatestGitTag(source Source, show bool) (string, error) {
 	if source.Type == "git" {
 		repository := "https://github.com/" + strings.Split(source.URI, "/")[3] + "/" + strings.Split(source.URI, "/")[4]
-		remotes, err := commandOutput("git", "ls-remote", "--tags", repository)
+		remotes, err := command("git", show, "ls-remote", "--tags", repository)
 
 		if err != nil {
 			return "", err
@@ -244,22 +273,27 @@ func fetchLatestGitTag(source Source) (string, error) {
 	return "", fmt.Errorf("source is not a git repository")
 }
 
-func updateSource(sources *Sources, name string, source Source) error {
+func updateSource(sources *Sources, name string, source Source, show bool) (bool, error) {
+	updated := false
+
 	if !sources.Exists(name) {
-		return fmt.Errorf("source does not exist")
+		return updated, fmt.Errorf("source does not exist")
 	}
 
 	if source.Type == "git" {
-		tag, err := fetchLatestGitTag(source)
+		tag, err := fetchLatestGitTag(source, show)
 
 		if err != nil {
-			return err
+			return updated, err
 		}
 
 		if tag != source.Version {
-			fmt.Println("updated version for", name, "from", source.Version, "to", tag)
+			if show {
+				fmt.Println("updated version for", name, "from", source.Version, "to", tag)
+			}
 
 			source.Version = tag
+			updated = true
 
 			if strings.Contains(source.URITemplate, "{version}") {
 				source.URI = strings.Replace(source.URITemplate, "{version}", source.Version, 1)
@@ -267,19 +301,22 @@ func updateSource(sources *Sources, name string, source Source) error {
 		}
 	}
 
-	sha256, err := fetchSHA256(source.URI, source.Unpack)
+	sha256, err := fetchSHA256(source.URI, source.Unpack, show)
 
 	if err != nil {
-		return err
+		return updated, err
 	}
 
 	if sha256 != source.SHA256 {
-		fmt.Println("updated hash for", name, "from", source.SHA256, "to", sha256)
+		if show {
+			fmt.Println("updated hash for", name, "from", source.SHA256, "to", sha256)
+		}
 
 		source.SHA256 = sha256
+		updated = true
 	}
 
 	(*sources)[name] = source
 
-	return nil
+	return updated, nil
 }
