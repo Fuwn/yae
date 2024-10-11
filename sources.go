@@ -9,7 +9,7 @@ import (
 type Sources map[string]Source
 
 type Source struct {
-	Url    string `json:"url"`
+	URI    string `json:"url"`
 	SHA256 string `json:"sha256"`
 	Unpack bool   `json:"unpack"`
 }
