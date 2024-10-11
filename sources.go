@@ -18,6 +18,7 @@ type Source struct {
 	TagPredicate  string `json:"tag_predicate,omitempty"`
 	TrimTagPrefix string `json:"trim_tag_prefix,omitempty"`
 	Pinned        bool   `json:"pinned,omitempty"`
+	Force         bool   `json:"force,omitempty"`
 }
 
 func (s *Sources) EnsureLoaded() error {
