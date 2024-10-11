@@ -40,9 +40,18 @@ yae add \
   zen-browser-bin \
   'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
 
+# Adds a Yae dependency named `yaak` pinned at tag `2024.10.1` with tag trimming for updates
+yae add \
+  --type git \
+  --unpack=false \
+  --version 2024.10.1 \
+  --trim-tag-prefix v \
+  yaak \
+  'https://github.com/yaakapp/app/releases/download/v{version}/yaak_{version}_amd64.AppImage.tar.gz'
+
 # Updates all dependencies, e.g., updates the hash of `zen-browser-twilight-bin`
 # and bumps the version of `zen-browser-bin` to `1.0.1-a.8`, handling URI and
-# hash recalculations
+# hash recalculations, etc.
 yae update
 
 # Only updates `zen-browser-twilight-bin`
