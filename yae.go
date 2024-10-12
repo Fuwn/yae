@@ -37,6 +37,24 @@ func main() {
 				Value: "./yae.json",
 				Usage: "Sources path",
 			},
+			&cli.BoolFlag{
+				Name:  "debug",
+				Usage: "Enable debug output",
+				Action: func(*cli.Context, bool) error {
+					log.SetLevel(log.DebugLevel)
+
+					return nil
+				},
+			},
+			&cli.BoolFlag{
+				Name:  "silent",
+				Usage: "Silence log output",
+				Action: func(*cli.Context, bool) error {
+					log.SetLevel(log.WarnLevel)
+
+					return nil
+				},
+			},
 		},
 		Copyright: fmt.Sprintf("Copyright (c) 2024-%s Fuwn", fmt.Sprint(time.Now().Year())),
 		ExitErrHandler: func(c *cli.Context, err error) {
