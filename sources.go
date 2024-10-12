@@ -8,10 +8,6 @@ import (
 
 type Sources map[string]Source
 
-func (s *Sources) EnsureLoaded() error {
-	return nil
-}
-
 func (s *Sources) Add(name string, d Source) error {
 	if s.Exists(name) {
 		return fmt.Errorf("source already exists")
