@@ -88,10 +88,6 @@ func main() {
 						Name:  "tag-predicate",
 						Usage: "Git tag predicate used in identifying latest git source",
 					},
-					&cli.BoolFlag{
-						Name:  "silent",
-						Usage: "Silence output",
-					},
 					&cli.StringFlag{
 						Name:  "trim-tag-prefix",
 						Usage: "A prefix to trim from remote git tags",
@@ -151,7 +147,7 @@ func main() {
 						source.Force = true
 					}
 
-					if sha256, err := fetchSHA256(source.URL, c.Bool("unpack"), !c.Bool("silent")); err != nil {
+					if sha256, err := fetchSHA256(source.URL, c.Bool("unpack")); err != nil {
 						return err
 					} else {
 						source.SHA256 = sha256
