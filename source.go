@@ -59,6 +59,8 @@ func (source *Source) Update(sources *Sources, name string, force bool, forcePin
 
 			if strings.Contains(source.URLTemplate, "{version}") {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
+
+				log.Debugf("patched %s: substituted url template", name)
 			}
 		} else {
 			log.Infof("skipped %s: version remains unchanged", name)
@@ -66,6 +68,8 @@ func (source *Source) Update(sources *Sources, name string, force bool, forcePin
 			return updated, nil
 		}
 	}
+
+	log.Debugf("checking %s: sha256", name)
 
 	sha256, err := fetchSHA256(source.URL, source.Unpack)
 
