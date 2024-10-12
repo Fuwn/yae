@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 type Source struct {
@@ -27,7 +29,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 
 	if source.Pinned && !forcePinned {
 		if show {
-			fmt.Println("skipped update for", name, "because it is pinned")
+			log.Infof("skipped %s: source is pinned", name)
 		}
 
 		return updated, nil
@@ -41,8 +43,8 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 		}
 
 		if tag != source.Version || force || source.Force {
-			if show {
-				fmt.Println("updated version for", name, "from", source.Version, "to", tag)
+			if show && tag != source.Version {
+				log.Infof("bumped %s: %s -> %s", name, source.Version, tag)
 			}
 
 			if tag != source.Version {
@@ -56,7 +58,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 			}
 		} else {
 			if show {
-				fmt.Println("skipped update for", name, "because the version is unchanged")
+				log.Infof("skipped %s: version remains unchanged", name)
 			}
 
 			return updated, nil
@@ -71,7 +73,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 
 	if sha256 != source.SHA256 {
 		if show {
-			fmt.Println("updated hash for", name, "from", source.SHA256, "to", sha256)
+			log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
 		}
 
 		source.SHA256 = sha256
