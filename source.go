@@ -21,10 +21,18 @@ type Source struct {
 }
 
 func (source *Source) Update(sources *Sources, name string, show bool, force bool, forcePinned bool) (bool, error) {
+	if show {
+		log.Infof("checking %s", name)
+	}
+
 	updated := false
 
 	if !sources.Exists(name) {
-		return updated, fmt.Errorf("source does not exist")
+		if show {
+			log.Warnf("skipped %s: source does not exist", name)
+		}
+
+		return updated, nil
 	}
 
 	if source.Pinned && !forcePinned {
@@ -36,6 +44,8 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 	}
 
 	if source.Type == "git" {
+		log.Debugf("checking %s: remote git tag", name)
+
 		tag, err := source.fetchLatestGitTag()
 
 		if err != nil {
