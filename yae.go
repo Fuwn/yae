@@ -203,12 +203,12 @@ func main() {
 				ArgsUsage: "[name]",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "show-updated-only",
-						Usage: "Output a newline-seperated list of updated sources, silence other output",
+						Name:  "output-updated-list",
+						Usage: "Output a newline-seperated list of updated sources, regardless of silent mode",
 					},
 					&cli.BoolFlag{
-						Name:  "show-updated-only-formatted",
-						Usage: "Output a comma and/or ampersand list of updated sources, silence other output",
+						Name:  "output-formatted-updated-list",
+						Usage: "Output a comma and/or ampersand list of updated sources, regardless of silent mode",
 					},
 					&cli.BoolFlag{
 						Name:  "force-hashed",
@@ -249,11 +249,11 @@ func main() {
 						}
 					}
 
-					if c.Bool("show-updated-only") {
+					if c.Bool("output-updated-list") {
 						for _, update := range updates {
 							fmt.Println(update)
 						}
-					} else if c.Bool("show-updated-only-formatted") {
+					} else if c.Bool("output-formatted-updated-list") {
 						fmt.Println(lister(updates))
 					}
 
