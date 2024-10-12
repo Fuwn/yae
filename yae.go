@@ -350,8 +350,11 @@ func updateSource(sources *Sources, name string, source Source, show bool, force
 				fmt.Println("updated version for", name, "from", source.Version, "to", tag)
 			}
 
+			if tag != source.Version {
+				updated = true
+			}
+
 			source.Version = tag
-			updated = true
 
 			if strings.Contains(source.URLTemplate, "{version}") {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
