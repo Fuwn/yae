@@ -8,19 +8,6 @@ import (
 
 type Sources map[string]Source
 
-type Source struct {
-	URL           string `json:"url"`
-	SHA256        string `json:"sha256"`
-	Unpack        bool   `json:"unpack"`
-	Type          string `json:"type"`
-	Version       string `json:"version,omitempty"`
-	URLTemplate   string `json:"url_template,omitempty"`
-	TagPredicate  string `json:"tag_predicate,omitempty"`
-	TrimTagPrefix string `json:"trim_tag_prefix,omitempty"`
-	Pinned        bool   `json:"pinned,omitempty"`
-	Force         bool   `json:"force,omitempty"`
-}
-
 func (s *Sources) EnsureLoaded() error {
 	return nil
 }
