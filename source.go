@@ -34,7 +34,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 	}
 
 	if source.Type == "git" {
-		tag, err := fetchLatestGitTag(*source, show)
+		tag, err := source.fetchLatestGitTag(show)
 
 		if err != nil {
 			return updated, err
@@ -83,7 +83,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 	return updated, nil
 }
 
-func fetchLatestGitTag(source Source, show bool) (string, error) {
+func (source *Source) fetchLatestGitTag(show bool) (string, error) {
 	if source.Type == "git" {
 		repository := "https://github.com/" + strings.Split(source.URL, "/")[3] + "/" + strings.Split(source.URL, "/")[4]
 		remotes, err := command("bash", show, "-c", fmt.Sprintf("git ls-remote %s | awk -F'/' '{print $NF}' | sort -V", repository))
