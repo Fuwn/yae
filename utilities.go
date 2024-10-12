@@ -7,14 +7,14 @@ import (
 	"strings"
 )
 
-func fetchSHA256(url string, unpack bool, show bool) (string, error) {
+func fetchSHA256(url string, unpack bool) (string, error) {
 	arguments := []string{"--type", "sha256", url}
 
 	if unpack {
 		arguments = append([]string{"--unpack"}, arguments...)
 	}
 
-	output, err := command("nix-prefetch-url", show, arguments...)
+	output, err := command("nix-prefetch-url", false, arguments...)
 
 	if err != nil {
 		return "", err
