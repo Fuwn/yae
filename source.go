@@ -20,25 +20,19 @@ type Source struct {
 	Force         bool   `json:"force,omitempty"`
 }
 
-func (source *Source) Update(sources *Sources, name string, show bool, force bool, forcePinned bool) (bool, error) {
-	if show {
-		log.Infof("checking %s", name)
-	}
+func (source *Source) Update(sources *Sources, name string, force bool, forcePinned bool) (bool, error) {
+	log.Infof("checking %s", name)
 
 	updated := false
 
 	if !sources.Exists(name) {
-		if show {
-			log.Warnf("skipped %s: source does not exist", name)
-		}
+		log.Warnf("skipped %s: source does not exist", name)
 
 		return updated, nil
 	}
 
 	if source.Pinned && !forcePinned {
-		if show {
-			log.Infof("skipped %s: source is pinned", name)
-		}
+		log.Infof("skipped %s: source is pinned", name)
 
 		return updated, nil
 	}
@@ -53,7 +47,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 		}
 
 		if tag != source.Version || force || source.Force {
-			if show && tag != source.Version {
+			if tag != source.Version {
 				log.Infof("bumped %s: %s -> %s", name, source.Version, tag)
 			}
 
@@ -67,9 +61,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 			}
 		} else {
-			if show {
-				log.Infof("skipped %s: version remains unchanged", name)
-			}
+			log.Infof("skipped %s: version remains unchanged", name)
 
 			return updated, nil
 		}
@@ -82,9 +74,7 @@ func (source *Source) Update(sources *Sources, name string, show bool, force boo
 	}
 
 	if sha256 != source.SHA256 {
-		if show {
-			log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
-		}
+		log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
 
 		source.SHA256 = sha256
 		updated = true
