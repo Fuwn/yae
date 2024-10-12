@@ -220,14 +220,13 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					showAll := !c.Bool("show-updated-only") && !c.Bool("show-updated-only-formatted")
 					updates := []string{}
 					force := c.Bool("force-hashed")
 					forcePinned := c.Bool("force-pinned")
 
 					if c.Args().Len() == 0 {
 						for name, source := range sources {
-							if updated, err := source.Update(&sources, name, showAll, force, forcePinned); err != nil {
+							if updated, err := source.Update(&sources, name, force, forcePinned); err != nil {
 								return err
 							} else if updated {
 								updates = append(updates, name)
@@ -237,7 +236,7 @@ func main() {
 						name := c.Args().Get(0)
 						source := sources[name]
 
-						if updated, err := source.Update(&sources, name, showAll, force, forcePinned); err != nil {
+						if updated, err := source.Update(&sources, name, force, forcePinned); err != nil {
 							return err
 						} else if updated {
 							updates = append(updates, name)
