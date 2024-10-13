@@ -8,6 +8,48 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func AddFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "unpack",
+			Usage: "Unpack the source into the Nix Store",
+			Value: true,
+		},
+		&cli.StringFlag{
+			Name:     "type",
+			Usage:    "Source type",
+			Required: true,
+			Action: func(c *cli.Context, value string) error {
+				if value != "binary" && value != "git" {
+					return fmt.Errorf("invalid source type: must be 'binary' or 'git'")
+				}
+
+				return nil
+			},
+		},
+		&cli.StringFlag{
+			Name:  "version",
+			Usage: "Source version used in identifying latest git source",
+		},
+		&cli.StringFlag{
+			Name:  "tag-predicate",
+			Usage: "Git tag predicate used in identifying latest git source",
+		},
+		&cli.StringFlag{
+			Name:  "trim-tag-prefix",
+			Usage: "A prefix to trim from remote git tags",
+		},
+		&cli.BoolFlag{
+			Name:  "pin",
+			Usage: "Prevent the source from being updated",
+		},
+		&cli.BoolFlag{
+			Name:  "force",
+			Usage: "Always force update the source, regardless of unchanged remote tag",
+		},
+	}
+}
+
 func Add(sources *yae.Sources) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		if c.Args().Len() != 2 {

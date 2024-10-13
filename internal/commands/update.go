@@ -7,6 +7,27 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func UpdateFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "output-updated-list",
+			Usage: "Output a newline-seperated list of updated sources, regardless of silent mode",
+		},
+		&cli.BoolFlag{
+			Name:  "output-formatted-updated-list",
+			Usage: "Output a comma and/or ampersand list of updated sources, regardless of silent mode",
+		},
+		&cli.BoolFlag{
+			Name:  "force-hashed",
+			Usage: "Force updates for non-pinned sources that have an unchanged version (recalculate hash)",
+		},
+		&cli.BoolFlag{
+			Name:  "force-pinned",
+			Usage: "Force updates for all sources, including pinned sources (can be used with --force-hashed)",
+		},
+	}
+}
+
 func Update(sources *yae.Sources) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		updates := []string{}
