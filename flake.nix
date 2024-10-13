@@ -54,7 +54,7 @@
               inherit meta;
 
               pname = name;
-              version = "2024.10.12";
+              version = "2024.10.13";
               src = pkgs.lib.cleanSource ./.;
               vendorHash = "sha256-XQEB2vgiztbtLnc7BR4WTouPI+2NDQXXFUNidqmvbac=";
               buildInputs = [ pkgs.musl ];
