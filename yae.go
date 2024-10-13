@@ -3,15 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/Fuwn/yae/internal/commands"
+	"github.com/Fuwn/yae/internal/yae"
 	"github.com/charmbracelet/log"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	sources := Sources{}
+	sources := yae.Sources{}
 
 	if err := (&cli.App{
 		Name:                 "yae",
@@ -65,15 +66,9 @@ func main() {
 		Suggest: true,
 		Commands: []*cli.Command{
 			{
-				Name:  "init",
-				Usage: "Initialise a new Yae environment",
-				Action: func(c *cli.Context) error {
-					if _, err := os.Stat(c.String("sources")); err == nil {
-						return fmt.Errorf("sources file already exists")
-					}
-
-					return sources.Save(c.String("sources"))
-				},
+				Name:   "init",
+				Usage:  "Initialise a new Yae environment",
+				Action: commands.Init(&sources),
 			},
 			{
 				Name:      "add",
@@ -119,82 +114,13 @@ func main() {
 						Usage: "Always force update the source, regardless of unchanged remote tag",
 					},
 				},
-				Action: func(c *cli.Context) error {
-					if c.Args().Len() != 2 {
-						return fmt.Errorf("invalid number of arguments")
-					}
-
-					if sources.Exists(c.Args().Get(0)) {
-						return fmt.Errorf("source already exists")
-					}
-
-					source := Source{
-						Unpack: c.Bool("unpack"),
-						Type:   c.String("type"),
-					}
-					version := c.String("version")
-
-					if version != "" {
-						source.URLTemplate = c.Args().Get(1)
-						source.Version = c.String("version")
-
-						if strings.Contains(source.URLTemplate, "{version}") {
-							source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
-						}
-					} else {
-						source.URL = c.Args().Get(1)
-					}
-
-					if source.Type == "git" && c.String("tag-predicate") != "" {
-						source.TagPredicate = c.String("tag-predicate")
-					}
-
-					if c.String("trim-tag-prefix") != "" {
-						source.TrimTagPrefix = c.String("trim-tag-prefix")
-					}
-
-					if c.Bool("pin") {
-						source.Pinned = true
-					}
-
-					if c.Bool("force") {
-						if source.Pinned {
-							return fmt.Errorf("cannot set a source to be statically forced and pinned at the same time")
-						}
-
-						source.Force = true
-					}
-
-					if sha256, err := fetchSHA256(source.URL, c.Bool("unpack")); err != nil {
-						return err
-					} else {
-						source.SHA256 = sha256
-					}
-
-					if err := sources.Add(c.Args().Get(0), source); err != nil {
-						return err
-					}
-
-					return sources.Save(c.String("sources"))
-				},
+				Action: commands.Add(&sources),
 			},
 			{
-				Name:  "drop",
-				Args:  true,
-				Usage: "Drop a source",
-				Action: func(c *cli.Context) error {
-					if c.Args().Len() == 0 {
-						return fmt.Errorf("invalid number of arguments")
-					}
-
-					if !sources.Exists(c.Args().Get(0)) {
-						return fmt.Errorf("source does not exist")
-					}
-
-					sources.Drop(c.Args().Get(0))
-
-					return sources.Save(c.String("sources"))
-				},
+				Name:   "drop",
+				Args:   true,
+				Usage:  "Drop a source",
+				Action: commands.Drop(&sources),
 			},
 			{
 				Name:      "update",
@@ -219,46 +145,7 @@ func main() {
 						Usage: "Force updates for all sources, including pinned sources (can be used with --force-hashed)",
 					},
 				},
-				Action: func(c *cli.Context) error {
-					updates := []string{}
-					force := c.Bool("force-hashed")
-					forcePinned := c.Bool("force-pinned")
-
-					if c.Args().Len() == 0 {
-						for name, source := range sources {
-							if updated, err := source.Update(&sources, name, force, forcePinned); err != nil {
-								return err
-							} else if updated {
-								updates = append(updates, name)
-							}
-						}
-					} else {
-						name := c.Args().Get(0)
-						source := sources[name]
-
-						if updated, err := source.Update(&sources, name, force, forcePinned); err != nil {
-							return err
-						} else if updated {
-							updates = append(updates, name)
-						}
-					}
-
-					if len(updates) > 0 {
-						if err := sources.Save(c.String("sources")); err != nil {
-							return err
-						}
-					}
-
-					if c.Bool("output-updated-list") {
-						for _, update := range updates {
-							fmt.Println(update)
-						}
-					} else if c.Bool("output-formatted-updated-list") {
-						fmt.Println(lister(updates))
-					}
-
-					return nil
-				},
+				Action: commands.Update(&sources),
 			},
 		},
 	}).Run(os.Args); err != nil {
