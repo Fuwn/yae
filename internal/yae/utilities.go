@@ -1,4 +1,4 @@
-package main
+package yae
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func fetchSHA256(url string, unpack bool) (string, error) {
+func FetchSHA256(url string, unpack bool) (string, error) {
 	arguments := []string{"--type", "sha256", url}
 
 	if unpack {
@@ -42,7 +42,7 @@ func command(name string, show bool, args ...string) (string, error) {
 	return string(out), err
 }
 
-func lister(items []string) string {
+func Lister(items []string) string {
 	if len(items) == 0 {
 		return ""
 	} else if len(items) == 1 {

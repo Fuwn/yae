@@ -1,4 +1,4 @@
-package main
+package yae
 
 import (
 	"fmt"
@@ -71,7 +71,7 @@ func (source *Source) Update(sources *Sources, name string, force bool, forcePin
 
 	log.Debugf("checking %s: sha256", name)
 
-	sha256, err := fetchSHA256(source.URL, source.Unpack)
+	sha256, err := FetchSHA256(source.URL, source.Unpack)
 
 	if err != nil {
 		return updated, err
