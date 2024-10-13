@@ -79,10 +79,11 @@ func main() {
 				Action:    commands.Add(&sources),
 			},
 			{
-				Name:   "drop",
-				Args:   true,
-				Usage:  "Drop a source",
-				Action: commands.Drop(&sources),
+				Name:      "drop",
+				ArgsUsage: "<name>",
+				Args:      true,
+				Usage:     "Drop a source",
+				Action:    commands.Drop(&sources),
 			},
 			{
 				Name:      "update",
