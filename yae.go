@@ -30,7 +30,16 @@ func main() {
 				return nil
 			}
 
-			return sources.Load(c.String("sources"))
+			location := c.String("sources")
+
+			if _, err := os.Stat(location); os.IsNotExist(err) {
+				return fmt.Errorf(
+					"file `%s` was not present, run `yae init` to create it",
+					location,
+				)
+			}
+
+			return sources.Load(location)
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
