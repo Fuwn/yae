@@ -1,17 +1,17 @@
 # ⛩️ Yae
 
-Yae is a simple dependency manager for use with Nix, similar to [niv](https://github.com/nmattia/niv/)
-and [`npins`](https://github.com/andir/npins/).
-
-I made it to solve my own problems, but I hope it can help you too.
+Yae is a powerful yet minimal dependency manager intended for use with Nix,
+which functions similar to [niv](https://github.com/nmattia/niv/) and [`npins`](https://github.com/andir/npins/).
 
 ## Introduction
 
-You can try out Yae without installing anything permanently by running
+You can try out Yae without installing anything permanently on your system by running
 `nix run github:Fuwn/yae`.
 
-Additionally, [Tsutsumi](https://github.com/Fuwn/tsutsumi) uses Yae to manage
-dependencies. You can check out a working implementation there.
+Check out [Tsutsumi](https://github.com/Fuwn/tsutsumi) to see an example of Yae running
+in a production environment. Tsutsumi fully leverages the power of Yae to manage
+and automagically update the sources of the Nix packages it provides using a simple
+GitHub Actions CRON workflow.
 
 ## Usage
 
@@ -40,7 +40,8 @@ yae add \
   zen-browser-bin \
   'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
 
-# Adds a Yae dependency named `yaak` pinned at tag `2024.10.1` with tag trimming for updates
+# Adds a Yae dependency named `yaak` pinned at tag `2024.10.1` with tag trimming
+# for updates
 yae add \
   --type git \
   --unpack=false \
