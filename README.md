@@ -72,20 +72,39 @@ Alternatively, without flake-less support, install the
 To add Yae support to your Nix expression after running `yae init`, just read
 from the Yae environment file.
 
-Here's an example taken from [Tsutsumi's `zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix).
+Here's an example snippet taken from Tsutsumi's [`zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix)
+and [`yae.json`](https://github.com/Fuwn/tsutsumi/blob/main/yae.json#L59-L67)
+showcasing Yae in action.
 
 ```nix
 # pkgs/zen-browser-bin.nix
 
+# This expression produces the `zen-browser-bin` package that Tsutsumi exposes
+# as a Nix package derivation.
+#
+# Since it is managed by Yae, it is kept 100% up to date with zero effort through
+# a Github Actions CRON job workflow that executes `yae update` periodically.
 {
   pkgs,
   self,
+  # This line imports Yae's environment configuration to be used below.
   yae ? builtins.fromJSON (builtins.readFile "${self}/yae.json"),
 }:
+# Tsutsumi exposes two versions of the Zen browser, the latest stable release
+# and the latest Twilight release (a bleeding edge, daily build). This library
+# function is one that takes one of two Yae sources for the Zen browser, and produces
+# a Nix package derivation for it.
 import "${self}/lib/zen-browser-bin.nix" {
-  # Effortless dependency updates just by running `yae update` from CI using a
-  # CRON job
+  # Here, the latest SHA256 hash and release version from Yae are passed to Tsutsumi's
+  # Zen browser packace function.
+  #
+  # If `yae update` is ran and a new release is detected, these values are
+  # updated by Yae, which then triggers another workflow to build and send the
+  # resulting derivation to Tsutsumi's binary cache.
   inherit (yae.zen-browser-bin) sha256 version;
+
+  # To generate the Twilight release package, this is all that is changed.
+  # inherit (yae.zen-browser-twilight-bin) sha256 version;
 } { inherit pkgs; }
 ```
 
