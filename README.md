@@ -3,6 +3,16 @@
 Yae is a powerful yet minimal dependency manager intended for use with Nix,
 which functions similar to [niv](https://github.com/nmattia/niv/) and [`npins`](https://github.com/andir/npins/).
 
+<details closed>
+  <summary>Why should I use Yae instead of niv or <a href="https://github.com/andir/npins/"><code>npins</code></a>?</summary>
+
+  1. No BS helper Nix expressions are needed by Yae. niv and `npins` spit out unnecessary and mostly complicated Nix expressions by default in the form of a file that you need to keep in sync with their mainline source. This requires additional upgrade commands from the CLI to maintain. A Yae environment is a single file and can be placed anywhere.
+  2. Yae has a simple and coherent source tree. niv has a total of 10000 LOC, `npins` sits at almost 6000 LOC flat, and Yae stands at just shy of 1500 LOC when looking at all files. Yae's core source code itself sits at just 462 LOC, which is much, **much** smaller than that of niv and `npins`' core source trees. This is all to say that Yae implements everything needed to replace niv and `npins` in far less effective code.
+  3. Yae is simple by nature in design and usage philosophy.
+
+     niv and `npins` are great, but are far too ~~overkill~~ overengineered for me and many other consumers. I say overengineered because I was able to write out Yae's initial implementation in just about thirty-minutes to an hour, and it was already complete enough for me to replace niv or `npins` in all of my production workflows. If you need some niche feature that niv or `npins` have, use them, but if not, Yae is here for you.
+</details>
+
 ## Introduction
 
 You can try out Yae without installing anything permanently on your system by running
