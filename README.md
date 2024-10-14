@@ -67,10 +67,12 @@ which provides both flake and flake-less installation options.
 Alternatively, without flake-less support, install the
 `inputs.yae.packages.${pkgs.system}.yae` package exposed by this flake.
 
-### Nix
+### Integrating with Nix
 
 To add Yae support to your Nix expression after running `yae init`, just read
-from the Yae environment file.
+from the Yae environment file. See the example below for more details.
+
+### Nix Example
 
 Here's an example snippet taken from Tsutsumi's [`zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix)
 and [`yae.json`](https://github.com/Fuwn/tsutsumi/blob/main/yae.json#L59-L67)
