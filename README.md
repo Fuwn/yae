@@ -71,11 +71,36 @@ yae update zen-browser-twilight-bin
 
 ## Installation
 
-Follow the installation instructions at [Tsutsumi](https://github.com/Fuwn/tsutsumi),
-which provides both flake and flake-less installation options.
+You can either install Yae through the flake that this repository exposes or
+through [Tsutsumi](https://github.com/Fuwn/tsutsumi).
 
-Alternatively, without flake-less support, install the
-`inputs.yae.packages.${pkgs.system}.yae` package exposed by this flake.
+[Tsutsumi](https://github.com/Fuwn/tsutsumi) provides both flake and flake-less installation
+options, while this repsitory only provides installation support through flakes using the
+exported `inputs.yae.packages.${pkgs.system}.yae` package.
+
+<details closed>
+  <summary>Click here to see a minimal Nix flake that exposes a development shell with Yae bundled.</summary>
+
+```nix
+# Enter the development shell using `nix develop --impure` (impure is used here because `nixpkgs` internally
+# assigns `builtins.currentSystem` to `nixpkgs.system` for the sake of simplicity in this example)
+{
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+  inputs.tsutsumi = {
+    url = "github:Fuwn/tsutsumi";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { nixpkgs, tsutsumi, self }:
+    let pkgs = import nixpkgs { inherit self; }; in {
+      devShells.${pkgs.system}.default = pkgs.mkShell {
+        buildInputs = [ tsutsumi.packages.${pkgs.system}.yae ];
+      };
+    };
+}
+```
+</details>
 
 ### Integrating with Nix
 
