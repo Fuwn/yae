@@ -108,7 +108,7 @@ showcasing Yae in action.
 # a Nix package derivation for it.
 import "${self}/lib/zen-browser-bin.nix" {
   # Here, the latest SHA256 hash and release version from Yae are passed to Tsutsumi's
-  # Zen browser packace function.
+  # Zen browser package function.
   #
   # If `yae update` is ran and a new release is detected, these values are
   # updated by Yae, which then triggers another workflow to build and send the
