@@ -28,6 +28,8 @@ GitHub Actions CRON workflow.
 View the [installations instructions](#installation) below to set up Yae after
 running `yae init`.
 
+### Example Environment Setup
+
 ```sh
 # Initialises a Yae environment in the current directory by creating an empty `yae.json`
 # file
