@@ -109,11 +109,27 @@ exported `inputs.yae.packages.${pkgs.system}.yae` package.
 To add Yae support to your Nix expression after running `yae init`, just read
 from the Yae environment file. See the example below for more details.
 
-### Nix Example
+### Examples
+
+Check out [`examples/nixpkgs`](./examples/nixpkgs) for a pure Nix example of Yae
+in action. This example is a little large since it constrains itself to **zero**
+inputs and manually constructs multi-system support. In a real-world scenario,
+you'd actually use something like [flake-utils](https://github.com/numtide/flake-utils)
+to replace all of the boilerplate. For this reason, [`examples/nixpkgs-simple`](./examples/nixpkgs-simple)
+exists, which functions identically, but uses `builtins.currentSystem` to
+populate the `nixpkgs.system` attribute. (requires `--impure`)
+
+If Nixpkgs ever goes out of date in these theorectical examples, just run
+`yae update`!
+
+#### Real-world Example
 
 Here's an example snippet taken from Tsutsumi's [`zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix)
 and [`yae.json`](https://github.com/Fuwn/tsutsumi/blob/main/yae.json#L59-L67)
 showcasing Yae in action.
+
+<details closed>
+  <summary>Expand this!</summary>
 
 ```nix
 # pkgs/zen-browser-bin.nix
@@ -146,6 +162,7 @@ import "${self}/lib/zen-browser-bin.nix" {
   # inherit (yae.zen-browser-twilight-bin) sha256 version;
 } { inherit pkgs; }
 ```
+</details>
 
 ## `--help`
 
