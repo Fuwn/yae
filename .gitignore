@@ -1,4 +1,4 @@
 /yae
 .pre-commit-config.yaml
 result
-yae.json
+/yae.json
