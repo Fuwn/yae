@@ -6,11 +6,29 @@ which functions similar to [niv](https://github.com/nmattia/niv/) and [`npins`](
 <details closed>
   <summary>Why should I consider Yae over niv or <code>npins</code>?</summary>
 
-  1. No BS helper Nix expressions are needed by Yae. niv and `npins` spit out unnecessary and mostly complicated Nix expressions by default in the form of a file that you need to keep in sync with their mainline source. This requires additional upgrade commands from the CLI and more to maintain. A Yae environment is a single file and can be placed anywhere.
-  2. Yae has a simple and coherent source tree. niv has a total of 10000 LOC (lines of code), `npins` sits at almost 6000 LOC flat, and Yae stands at just shy of 1500 LOC when looking at all files. Yae's core source code itself sits at just 462 LOC, which is much, **much** smaller than that of niv and `npins`' core source trees. This is all to say that Yae implements everything needed to replace niv and `npins` in a much more efficient and concise codebase.
+  1. No unnecessary helper Nix expressions are needed by Yae.
+
+     niv and `npins` spit out medium-to-large sized Nix expressions that vary in
+     complexity in the form of a file that you need to keep in sync with their
+     mainline sources. This requires additional upgrade commands in the CLI and
+     more effort to maintain. A Yae environment is a single file and can be placed
+     anywhere and read just as simply.
+  2. Yae has a simple and coherent source tree. niv has a total of 10000 LOC
+     (lines of code), `npins` sits at almost 6000 LOC flat, and Yae stands at just
+     shy of 1500 LOC when looking at all files. Yae's core source code itself sits
+     at just 462 LOC, which is much, **much** smaller than that of niv and `npins`'
+     core trees. This is all to say that Yae implements everything needed to functionally
+     replace niv and `npins` in any workflow, and in much more efficient and concise
+     codebase.
   3. Yae is simple by nature in design and usage philosophy.
 
-     niv and `npins` are great, but are far too ~~overkill~~ overengineered for me and many other consumers. I say overengineered because I was able to write out Yae's initial implementation in just about thirty-minutes to an hour, and it was already complete enough for me to replace niv or `npins` in all of my production workflows. If you need some niche feature that niv or `npins` have, use them, but if not, Yae is here for you.
+     niv and `npins` are great, but are far too ~~overkill~~ overengineered for me
+     and many other consumers. I say overengineered because I was able to write out
+     Yae's initial implementation in just about thirty-minutes to an hour, and it
+     was already complete enough for me to replace niv or `npins` in all of my production
+     workflows. If you need some niche feature that niv or `npins` has, use them,
+     but if not, Yae is here for you.
+
 </details>
 
 ## Introduction
@@ -102,6 +120,7 @@ exported `inputs.yae.packages.${pkgs.system}.yae` package.
     };
 }
 ```
+
 </details>
 
 ### Integrating with Nix
@@ -162,6 +181,7 @@ import "${self}/lib/zen-browser-bin.nix" {
   # inherit (yae.zen-browser-twilight-bin) sha256 version;
 } { inherit pkgs; }
 ```
+
 </details>
 
 ## `--help`
