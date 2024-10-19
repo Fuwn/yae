@@ -95,8 +95,8 @@ You can either install Yae through the flake that this repository exposes or
 through [Tsutsumi](https://github.com/Fuwn/tsutsumi).
 
 [Tsutsumi](https://github.com/Fuwn/tsutsumi) provides both flake and flake-less installation
-options, while this repsitory only provides installation support through flakes using the
-exported `inputs.yae.packages.${pkgs.system}.yae` package.
+options, while this repository only provides installation support through flakes
+using the exported `inputs.yae.packages.${pkgs.system}.yae` package.
 
 <details closed>
   <summary>Click here to see a minimal Nix flake that exposes a development shell with Yae bundled.</summary>
