@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": { "$schema": { "type": "string" } },
+  "additionalProperties": {
+    "type": "object",
+    "required": ["url", "sha256", "unpack", "type"],
+    "additionalProperties": false,
+    "properties": {
+      "url": { "type": "string" },
+      "sha256": { "type": "string" },
+      "unpack": { "type": "boolean" },
+      "type": { "type": "string" },
+      "version": { "type": "string" },
+      "url_template": { "type": "string" },
+      "tag_predicate": { "type": "string" },
+      "trim_tag_prefix": { "type": "string" },
+      "pinned": { "type": "boolean" },
+      "force": { "type": "boolean" }
+    }
+  }
+}
