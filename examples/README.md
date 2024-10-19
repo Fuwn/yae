@@ -1,5 +1,7 @@
 # Examples
 
+If Nixpkgs ever goes out of date in these examples, just run `yae update`!
+
 ## [Nixpkgs](https://github.com/Fuwn/yae/tree/main/examples/nixpkgs)
 
 This example showcases adding the Nixpkgs unstable branch as a Yae source,
