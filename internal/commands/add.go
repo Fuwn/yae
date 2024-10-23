@@ -107,6 +107,10 @@ func Add(sources *yae.Sources) func(c *cli.Context) error {
 			return err
 		}
 
+		if c.Bool("dry-run") {
+			return nil
+		}
+
 		return sources.Save(c.String("sources"))
 	}
 }

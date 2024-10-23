@@ -14,6 +14,10 @@ func Init(sources *yae.Sources) func(c *cli.Context) error {
 			return fmt.Errorf("sources file already exists")
 		}
 
+		if c.Bool("dry-run") {
+			return nil
+		}
+
 		return sources.Save(c.String("sources"))
 	}
 }

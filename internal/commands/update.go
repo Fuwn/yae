@@ -53,7 +53,7 @@ func Update(sources *yae.Sources) func(c *cli.Context) error {
 			}
 		}
 
-		if len(updates) > 0 {
+		if len(updates) > 0 && !c.Bool("dry-run") {
 			if err := sources.Save(c.String("sources")); err != nil {
 				return err
 			}

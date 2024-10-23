@@ -200,6 +200,9 @@ COMMANDS:
 
 GLOBAL OPTIONS:
    --sources value  Sources path (default: "./yae.json")
+   --debug          Enable debug output (default: false)
+   --silent         Silence log output (default: false)
+   --dry-run        Prevents writing to disk (default: false)
    --help, -h       show help
 
 COPYRIGHT:

@@ -19,6 +19,10 @@ func Drop(sources *yae.Sources) func(c *cli.Context) error {
 
 		sources.Drop(c.Args().Get(0))
 
+		if c.Bool("dry-run") {
+			return nil
+		}
+
 		return sources.Save(c.String("sources"))
 	}
 }
