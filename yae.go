@@ -65,6 +65,10 @@ func main() {
 					return nil
 				},
 			},
+			&cli.BoolFlag{
+				Name:  "dry-run",
+				Usage: "Prevents writing to disk",
+			},
 		},
 		Copyright: fmt.Sprintf("Copyright (c) 2024-%s Fuwn", fmt.Sprint(time.Now().Year())),
 		ExitErrHandler: func(c *cli.Context, err error) {
