@@ -2,6 +2,7 @@ package yae
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -91,7 +92,15 @@ func (source *Source) Update(sources *Sources, name string, force bool, forcePin
 
 func (source *Source) fetchLatestGitTag() (string, error) {
 	if source.Type == "git" {
-		repository := "https://github.com/" + strings.Split(source.URL, "/")[3] + "/" + strings.Split(source.URL, "/")[4]
+		url, err := url.Parse(source.URL)
+
+		if err != nil {
+			return "", err
+		}
+
+		domain := url.Host
+		pathSegments := strings.Split(url.Path, "/")
+		repository := url.Scheme + "://" + domain + "/" + pathSegments[1] + "/" + pathSegments[2]
 		remotes, err := command("bash", false, "-c", fmt.Sprintf("git ls-remote %s | awk -F'/' '{print $NF}' | sort -V", repository))
 
 		if err != nil {
