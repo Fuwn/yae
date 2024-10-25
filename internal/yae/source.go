@@ -21,7 +21,7 @@ type Source struct {
 	Force         bool   `json:"force,omitempty"`
 }
 
-func (source *Source) Update(sources *Sources, name string, force bool, forcePinned bool) (bool, error) {
+func (source *Source) Update(sources *Environment, name string, force bool, forcePinned bool) (bool, error) {
 	log.Infof("checking %s", name)
 
 	updated := false
@@ -85,7 +85,7 @@ func (source *Source) Update(sources *Sources, name string, force bool, forcePin
 		updated = true
 	}
 
-	(*sources)[name] = *source
+	(*sources).Sources[name] = *source
 
 	return updated, nil
 }

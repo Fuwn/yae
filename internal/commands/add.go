@@ -50,7 +50,7 @@ func AddFlags() []cli.Flag {
 	}
 }
 
-func Add(sources *yae.Sources) func(c *cli.Context) error {
+func Add(sources *yae.Environment) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		if c.Args().Len() != 2 {
 			return fmt.Errorf("invalid number of arguments")
