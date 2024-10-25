@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	sources := yae.Sources{}
+	sources := yae.Environment{}
 
 	if err := (&cli.App{
 		Name:                 "yae",

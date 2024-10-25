@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Drop(sources *yae.Sources) func(c *cli.Context) error {
+func Drop(sources *yae.Environment) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		if c.Args().Len() == 0 {
 			return fmt.Errorf("invalid number of arguments")

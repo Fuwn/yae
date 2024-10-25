@@ -28,14 +28,14 @@ func UpdateFlags() []cli.Flag {
 	}
 }
 
-func Update(sources *yae.Sources) func(c *cli.Context) error {
+func Update(sources *yae.Environment) func(c *cli.Context) error {
 	return func(c *cli.Context) error {
 		updates := []string{}
 		force := c.Bool("force-hashed")
 		forcePinned := c.Bool("force-pinned")
 
 		if c.Args().Len() == 0 {
-			for name, source := range *sources {
+			for name, source := range sources.Sources {
 				if updated, err := source.Update(sources, name, force, forcePinned); err != nil {
 					return err
 				} else if updated {
@@ -44,7 +44,7 @@ func Update(sources *yae.Sources) func(c *cli.Context) error {
 			}
 		} else {
 			name := c.Args().Get(0)
-			source := (*sources)[name]
+			source := (*sources).Sources[name]
 
 			if updated, err := source.Update(sources, name, force, forcePinned); err != nil {
 				return err
