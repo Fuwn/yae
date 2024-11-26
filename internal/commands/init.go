@@ -14,6 +14,9 @@ func Init(sources *yae.Environment) func(c *cli.Context) error {
 			return fmt.Errorf("sources file already exists")
 		}
 
+		sources.Sources = make(map[string]yae.Source)
+		sources.Schema = "https://raw.githubusercontent.com/Fuwn/yae/refs/heads/main/yae.schema.json"
+
 		if c.Bool("dry-run") {
 			return nil
 		}
