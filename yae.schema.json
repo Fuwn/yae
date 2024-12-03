@@ -4,11 +4,12 @@
   "properties": { "$schema": { "type": "string" } },
   "additionalProperties": {
     "type": "object",
-    "required": ["url", "sha256", "unpack", "type"],
+    "required": ["url", "sha256", "hash", "unpack", "type"],
     "additionalProperties": false,
     "properties": {
       "url": { "type": "string" },
       "sha256": { "type": "string" },
+      "hash": { "type": "string" },
       "unpack": { "type": "boolean" },
       "type": { "type": "string" },
       "version": { "type": "string" },

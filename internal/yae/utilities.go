@@ -25,6 +25,16 @@ func FetchSHA256(url string, unpack bool) (string, error) {
 	return strings.Trim(lines[len(lines)-2], "\n"), nil
 }
 
+func FetchSRIHash(sha256 string) (string, error) {
+	output, err := command("nix", false, "hash", "convert", "--hash-algo", "sha256", "--from", "nix32", sha256)
+
+	if err != nil {
+		return "", err
+	}
+
+	return strings.Trim(output, "\n"), nil
+}
+
 func command(name string, show bool, args ...string) (string, error) {
 	executable, err := exec.LookPath(name)
 	out := []byte{}
