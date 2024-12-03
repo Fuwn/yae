@@ -11,6 +11,7 @@ import (
 type Source struct {
 	URL           string `json:"url"`
 	SHA256        string `json:"sha256"`
+	Hash          string `json:"hash"`
 	Unpack        bool   `json:"unpack"`
 	Type          string `json:"type"`
 	Version       string `json:"version,omitempty"`
@@ -78,10 +79,17 @@ func (source *Source) Update(sources *Environment, name string, force bool, forc
 		return updated, err
 	}
 
-	if sha256 != source.SHA256 {
+	sriHash, err := FetchSRIHash(sha256)
+
+	if err != nil {
+		return updated, err
+	}
+
+	if sha256 != source.SHA256 || sriHash != source.Hash || force || source.Force {
 		log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
 
 		source.SHA256 = sha256
+		source.Hash = sriHash
 		updated = true
 	}
 
