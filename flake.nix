@@ -36,6 +36,8 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
+        inherit (pkgs.stdenv) isDarwin;
+
         pkgs = import nixpkgs { inherit system; };
         name = "yae";
 
@@ -49,25 +51,36 @@
         };
 
         yae =
-          pkgs.buildGo122Module.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv; }
+          pkgs.buildGo122Module.override
+            {
+              stdenv = if isDarwin then pkgs.clangStdenv else pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv;
+            }
             rec {
               inherit meta;
 
               pname = name;
-              version = "2024.12.02";
+              version = "2025.01.03";
               src = pkgs.lib.cleanSource ./.;
               vendorHash = "sha256-XQEB2vgiztbtLnc7BR4WTouPI+2NDQXXFUNidqmvbac=";
-              buildInputs = [ pkgs.musl ];
+              buildInputs = if isDarwin then [ ] else [ pkgs.musl ];
               propagatedBuildInputs = [ pkgs.gitMinimal ];
 
-              ldflags = [
-                "-s"
-                "-w"
-                "-linkmode=external"
-                "-extldflags=-static"
-                "-X main.Version=${version}"
-                "-X main.Commit=${version}"
-              ];
+              ldflags =
+                [
+                  "-s"
+                  "-w"
+                  "-X main.Version=${version}"
+                  "-X main.Commit=${version}"
+                ]
+                ++ (
+                  if isDarwin then
+                    [ ]
+                  else
+                    [
+                      "-linkmode=external"
+                      "-extldflags=-static"
+                    ]
+                );
             };
       in
       {
