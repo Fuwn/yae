@@ -206,7 +206,7 @@ GLOBAL OPTIONS:
    --help, -h       show help
 
 COPYRIGHT:
-   Copyright (c) 2024-2024 Fuwn
+   Copyright (c) 2024-2025 Fuwn
 ```
 
 ## Licence
