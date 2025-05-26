@@ -47,7 +47,7 @@
           license = licenses.gpl3Only;
           maintainers = [ maintainers.Fuwn ];
           mainPackage = name;
-          platforms = platforms.linux;
+          platforms = platforms.unix;
         };
 
         yae =
