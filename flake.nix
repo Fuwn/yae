@@ -51,7 +51,7 @@
         };
 
         yae =
-          pkgs.buildGo122Module.override
+          pkgs.buildGo123Module.override
             {
               stdenv = if isDarwin then pkgs.clangStdenv else pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv;
             }
@@ -117,7 +117,7 @@
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
           buildInputs = self.checks.${system}.pre-commit-check.enabledPackages ++ [
-            pkgs.go_1_22
+            pkgs.go_1_23
           ];
         };
       }
