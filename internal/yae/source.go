@@ -85,7 +85,7 @@ func (source *Source) Update(sources *Environment, name string, force bool, forc
 		return updated, err
 	}
 
-	if sha256 != source.SHA256 || sriHash != source.Hash || force || source.Force {
+	if sha256 != source.SHA256 || sriHash != source.Hash || force {
 		log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
 
 		source.SHA256 = sha256
