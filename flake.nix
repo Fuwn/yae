@@ -59,7 +59,7 @@
               inherit meta;
 
               pname = name;
-              version = "2025.06.22";
+              version = "2025.11.25";
               src = pkgs.lib.cleanSource ./.;
               vendorHash = "sha256-XQEB2vgiztbtLnc7BR4WTouPI+2NDQXXFUNidqmvbac=";
               buildInputs = if isDarwin then [ ] else [ pkgs.musl ];
