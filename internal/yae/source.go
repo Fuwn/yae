@@ -3,6 +3,7 @@ package yae
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -127,8 +128,14 @@ func (source *Source) fetchLatestGitTag() (string, error) {
 		if source.TagPredicate == "" {
 			latest = refs[len(refs)-2]
 		} else {
+			pattern, err := regexp.Compile(source.TagPredicate)
+
+			if err != nil {
+				return "", fmt.Errorf("invalid tag_predicate regex pattern: %w", err)
+			}
+
 			for i := len(refs) - 2; i >= 0; i-- {
-				if strings.Contains(refs[i], source.TagPredicate) {
+				if pattern.MatchString(refs[i]) {
 					latest = refs[i]
 
 					break
