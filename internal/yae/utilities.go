@@ -37,7 +37,12 @@ func FetchSRIHash(sha256 string) (string, error) {
 
 func command(name string, show bool, args ...string) (string, error) {
 	executable, err := exec.LookPath(name)
-	out := []byte{}
+
+	if err != nil {
+		return "", fmt.Errorf("command not found: %s", name)
+	}
+
+	var out []byte
 
 	if show {
 		cmd := exec.Command(executable, args...)
