@@ -120,9 +120,7 @@ func (source *Source) fetchLatestGitTag() (string, error) {
 		var latest string
 
 		for i := range refs {
-			if strings.HasSuffix(refs[i], "^{}") {
-				refs[i] = strings.TrimSuffix(refs[i], "^{}")
-			}
+			refs[i] = strings.TrimSuffix(refs[i], "^{}")
 		}
 
 		if source.TagPredicate == "" {
