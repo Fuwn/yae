@@ -72,6 +72,8 @@ func Add(sources *yae.Environment) func(c *cli.Context) error {
 
 			if strings.Contains(source.URLTemplate, "{version}") {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
+			} else {
+				return fmt.Errorf("version template must contain {version}")
 			}
 		} else {
 			source.URL = c.Args().Get(1)
