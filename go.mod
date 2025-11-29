@@ -1,13 +1,15 @@
 module github.com/Fuwn/yae
 
-go 1.22.7
+go 1.25
 
-require github.com/urfave/cli/v2 v2.27.4
+require (
+	github.com/charmbracelet/log v0.4.0
+	github.com/urfave/cli/v2 v2.27.4
+)
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/lipgloss v0.10.0 // indirect
-	github.com/charmbracelet/log v0.4.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

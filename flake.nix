@@ -36,62 +36,21 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        inherit (pkgs.stdenv) isDarwin;
-
-        pkgs = import nixpkgs { inherit system; };
         name = "yae";
-
-        meta = with pkgs.lib; {
-          description = "Nix Dependency Manager";
-          homepage = "https://github.com/Fuwn/${name}";
-          license = licenses.gpl3Only;
-          maintainers = [ maintainers.Fuwn ];
-          mainPackage = name;
-          platforms = platforms.unix;
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ (import ./overlay.nix) ];
         };
-
-        yae =
-          pkgs.buildGo123Module.override
-            {
-              stdenv = if isDarwin then pkgs.clangStdenv else pkgs.stdenvAdapters.useMoldLinker pkgs.clangStdenv;
-            }
-            rec {
-              inherit meta;
-
-              pname = name;
-              version = "2025.11.29";
-              src = pkgs.lib.cleanSource ./.;
-              vendorHash = "sha256-XQEB2vgiztbtLnc7BR4WTouPI+2NDQXXFUNidqmvbac=";
-              buildInputs = if isDarwin then [ ] else [ pkgs.musl ];
-              propagatedBuildInputs = [ pkgs.gitMinimal ];
-
-              ldflags =
-                [
-                  "-s"
-                  "-w"
-                  "-X main.Version=${version}"
-                  "-X main.Commit=${version}"
-                ]
-                ++ (
-                  if isDarwin then
-                    [ ]
-                  else
-                    [
-                      "-linkmode=external"
-                      "-extldflags=-static"
-                    ]
-                );
-            };
       in
       {
         packages = {
-          default = yae;
+          default = pkgs.${name};
           ${name} = self.packages.${system}.default;
         };
 
         apps = {
           default = {
-            inherit meta;
+            inherit (pkgs.${name}) meta;
 
             type = "app";
             program = "${self.packages.${system}.default}/bin/${name}";
@@ -117,9 +76,12 @@
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
           buildInputs = self.checks.${system}.pre-commit-check.enabledPackages ++ [
-            pkgs.go_1_23
+            pkgs.go
           ];
         };
       }
-    );
+    )
+    // {
+      overlays.default = import ./overlay.nix;
+    };
 }
