@@ -11,11 +11,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var Version string
+
 func main() {
 	sources := yae.Environment{}
 
 	if err := (&cli.App{
 		Name:                 "yae",
+		Version:              Version,
 		Usage:                "Nix Dependency Manager",
 		Description:          "Nix Dependency Manager",
 		EnableBashCompletion: true,
