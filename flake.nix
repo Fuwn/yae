@@ -44,7 +44,10 @@
         meta = with pkgs.lib; {
           description = "Nix Dependency Manager";
           homepage = "https://github.com/Fuwn/${name}";
-          license = licenses.gpl3Only;
+          license = [
+            licenses.mit
+            licenses.asl20
+          ];
           maintainers = [ maintainers.Fuwn ];
           mainPackage = name;
           platforms = platforms.unix;
