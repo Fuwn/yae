@@ -4,8 +4,6 @@
     "sha256": "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy",
     "hash": "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI=",
     "unpack": true,
-    "type": "git",
-    "version": "nixos-unstable",
-    "url_template": "https://github.com/NixOS/nixpkgs/archive/{version}.tar.gz"
+    "type": "binary"
   }
 }

@@ -3,6 +3,7 @@ package yae
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -114,6 +115,44 @@ func TestRepositoryURL(t *testing.T) {
 				t.Fatalf("repository = %q, error = %v; want %q", got, err, test.want)
 			}
 		})
+	}
+}
+
+func TestGitVersionOrderingWithLocalRepository(t *testing.T) {
+	repository := t.TempDir()
+	runGit := func(input string, arguments ...string) string {
+		t.Helper()
+
+		process := exec.Command("git", append([]string{"-C", repository}, arguments...)...)
+
+		process.Stdin = strings.NewReader(input)
+
+		output, err := process.CombinedOutput()
+
+		if err != nil {
+			t.Fatalf("git %v: %s, %v", arguments, output, err)
+		}
+
+		return strings.TrimSpace(string(output))
+	}
+
+	runGit("", "init", "--bare")
+
+	tree := runGit("", "mktree")
+	commit := runGit("", "-c", "user.name=Yae Test", "-c", "user.email=yae@example.test", "commit-tree", tree, "-m", "fixture")
+
+	runGit("", "update-ref", "refs/tags/v2", commit)
+	runGit("", "update-ref", "refs/tags/v10", commit)
+	runGit("", "update-ref", "refs/heads/zzbranch", commit)
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "url.file://"+repository+".insteadOf")
+	t.Setenv("GIT_CONFIG_VALUE_0", "https://example.test/owner/repo")
+
+	source := Source{Type: "git", URL: "https://example.test/owner/repo/archive/v1.tar.gz"}
+	version, err := source.fetchLatestGitTag(context.Background())
+
+	if err != nil || version != "v10" {
+		t.Fatalf("latest tag = %q, error = %v", version, err)
 	}
 }
 

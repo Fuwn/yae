@@ -7,22 +7,22 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Drop(sources *yae.Environment) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
-		if c.Args().Len() == 0 {
-			return fmt.Errorf("invalid number of arguments")
+func Drop(sources *yae.Environment) func(context *cli.Context) error {
+	return func(context *cli.Context) error {
+		if context.Args().Len() != 1 {
+			return fmt.Errorf("drop requires exactly one source name")
 		}
 
-		if !sources.Exists(c.Args().Get(0)) {
+		if !sources.Exists(context.Args().Get(0)) {
 			return fmt.Errorf("source does not exist")
 		}
 
-		sources.Drop(c.Args().Get(0))
-
-		if c.Bool("dry-run") {
+		if context.Bool("dry-run") {
 			return nil
 		}
 
-		return sources.Save(c.String("sources"))
+		sources.Drop(context.Args().Get(0))
+
+		return sources.Save(context.String("sources"))
 	}
 }

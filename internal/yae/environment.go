@@ -13,17 +13,25 @@ type Environment struct {
 	Sources map[string]Source
 }
 
-func (environment *Environment) Add(name string, source Source) error {
+func (environment Environment) CheckNewName(name string) error {
 	if err := validateName(name); err != nil {
+		return err
+	}
+
+	if environment.Exists(name) {
+		return fmt.Errorf("source %q already exists", name)
+	}
+
+	return nil
+}
+
+func (environment *Environment) Add(name string, source Source) error {
+	if err := environment.CheckNewName(name); err != nil {
 		return err
 	}
 
 	if err := source.validateStored(); err != nil {
 		return fmt.Errorf("source %q: %w", name, err)
-	}
-
-	if environment.Exists(name) {
-		return fmt.Errorf("source already exists")
 	}
 
 	if environment.Sources == nil {
@@ -35,7 +43,7 @@ func (environment *Environment) Add(name string, source Source) error {
 	return nil
 }
 
-func (environment *Environment) Exists(name string) bool {
+func (environment Environment) Exists(name string) bool {
 	_, exists := environment.Sources[name]
 
 	return exists

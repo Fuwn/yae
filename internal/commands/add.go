@@ -43,31 +43,27 @@ func AddFlags() []cli.Flag {
 	}
 }
 
-func Add(sources *yae.Environment) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
-		if c.Args().Len() != 2 {
+func Add(sources *yae.Environment) func(context *cli.Context) error {
+	return func(context *cli.Context) error {
+		if context.Args().Len() != 2 {
 			return fmt.Errorf("invalid number of arguments")
 		}
 
-		if sources.Exists(c.Args().Get(0)) {
-			return fmt.Errorf("source already exists")
-		}
+		name := context.Args().Get(0)
 
-		name := c.Args().Get(0)
-
-		if strings.TrimSpace(name) == "" || name == "$schema" {
-			return fmt.Errorf("source name must be non-empty and cannot be $schema")
+		if err := sources.CheckNewName(name); err != nil {
+			return err
 		}
 
 		source := yae.Source{
-			URL:           c.Args().Get(1),
-			Unpack:        c.Bool("unpack"),
-			Type:          c.String("type"),
-			Version:       c.String("version"),
-			TagPredicate:  c.String("tag-predicate"),
-			TrimTagPrefix: c.String("trim-tag-prefix"),
-			Pinned:        c.Bool("pin"),
-			Force:         c.Bool("force"),
+			URL:           context.Args().Get(1),
+			Unpack:        context.Bool("unpack"),
+			Type:          context.String("type"),
+			Version:       context.String("version"),
+			TagPredicate:  context.String("tag-predicate"),
+			TrimTagPrefix: context.String("trim-tag-prefix"),
+			Pinned:        context.Bool("pin"),
+			Force:         context.Bool("force"),
 		}
 
 		if source.Version != "" {
@@ -79,18 +75,18 @@ func Add(sources *yae.Environment) func(c *cli.Context) error {
 			return err
 		}
 
-		if err := source.RefreshHashes(c.Context); err != nil {
+		if err := source.RefreshHashes(context.Context); err != nil {
 			return err
+		}
+
+		if context.Bool("dry-run") {
+			return nil
 		}
 
 		if err := sources.Add(name, source); err != nil {
 			return err
 		}
 
-		if c.Bool("dry-run") {
-			return nil
-		}
-
-		return sources.Save(c.String("sources"))
+		return sources.Save(context.String("sources"))
 	}
 }

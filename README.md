@@ -13,13 +13,8 @@ which functions similar to [niv](https://github.com/nmattia/niv/) and [`npins`](
      mainline sources. This requires additional upgrade commands in the CLI and
      more effort to maintain. A Yae environment is a single file and can be placed
      anywhere and read just as simply.
-  2. Yae has a simple and coherent source tree. niv has a total of 10000 LOC
-     (lines of code), `npins` sits at almost 6000 LOC flat, and Yae stands at just
-     shy of 1500 LOC when looking at all files. Yae's core source code itself sits
-     at just 462 LOC, which is much, **much** smaller than that of niv and `npins`'
-     core trees. This is all to say that Yae implements everything needed to functionally
-     replace niv and `npins` in any workflow, and in much more efficient and concise
-     codebase.
+  2. Yae has a small, coherent source tree focused on fetching sources and
+     updating their versions and hashes.
   3. Yae is simple by nature in design and usage philosophy.
 
      niv and `npins` are great, but are far too ~~overkill~~ overengineered for me
@@ -62,7 +57,7 @@ yae add \
   zen-browser-twilight-bin \
   'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
 
-# Adds a Yae dependency named `zen-browser-bin` pinned at tag `1.0.1-a.7`
+# This command adds a Yae dependency named `zen-browser-bin` starting at tag `1.0.1-a.7`.
 yae add \
   --type git \
   --version 1.0.1-a.7 \
@@ -70,8 +65,8 @@ yae add \
   zen-browser-bin \
   'https://github.com/zen-browser/desktop/releases/download/{version}/zen.linux-specific.tar.bz2'
 
-# Adds a Yae dependency named `yaak` pinned at tag `2024.10.1` with tag trimming
-# for updates
+# This command adds a Yae dependency named `yaak` starting at tag `2024.10.1` with tag
+# trimming for updates.
 yae add \
   --type git \
   --unpack=false \
@@ -88,6 +83,8 @@ yae update
 # Only updates `zen-browser-twilight-bin`
 yae update zen-browser-twilight-bin
 ```
+
+Use `--pin` when adding a source to prevent version and content updates.
 
 ## Installation
 
@@ -201,8 +198,8 @@ COMMANDS:
 GLOBAL OPTIONS:
    --sources value  Sources path (default: "./yae.json")
    --debug          Enable debug output (default: false)
-   --silent         Silence log output (default: false)
-   --dry-run        Prevents writing to disk (default: false)
+   --silent         Only log errors (default: false)
+   --dry-run        Preview changes without saving the sources file (downloads may still populate the Nix store) (default: false)
    --help, -h       show help
 
 COPYRIGHT:

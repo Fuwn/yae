@@ -31,13 +31,13 @@ func UpdateFlags() []cli.Flag {
 	}
 }
 
-func Update(sources *yae.Environment) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
-		if c.Args().Len() > 1 {
+func Update(sources *yae.Environment) func(context *cli.Context) error {
+	return func(context *cli.Context) error {
+		if context.Args().Len() > 1 {
 			return fmt.Errorf("update accepts at most one source name")
 		}
 
-		names := c.Args().Slice()
+		names := context.Args().Slice()
 
 		if len(names) == 0 {
 			for name := range sources.Sources {
@@ -60,7 +60,7 @@ func Update(sources *yae.Environment) func(c *cli.Context) error {
 			log.Infof("checking %s", name)
 
 			source := sources.Sources[name]
-			updated, err := source.Update(c.Context, c.Bool("force-hashed"), c.Bool("force-pinned"))
+			updated, err := source.Update(context.Context, context.Bool("force-hashed"), context.Bool("force-pinned"))
 
 			if err != nil {
 				return fmt.Errorf("source %q: %w", name, err)
@@ -73,10 +73,10 @@ func Update(sources *yae.Environment) func(c *cli.Context) error {
 		}
 
 		if len(updates) > 0 {
-			if c.Bool("dry-run") {
+			if context.Bool("dry-run") {
 				log.Infof("would update %s", strings.Join(updates, ", "))
 			} else {
-				if err := pending.Save(c.String("sources")); err != nil {
+				if err := pending.Save(context.String("sources")); err != nil {
 					return err
 				}
 
@@ -86,12 +86,12 @@ func Update(sources *yae.Environment) func(c *cli.Context) error {
 			}
 		}
 
-		if c.Bool("output-updated-list") {
+		if context.Bool("output-updated-list") {
 			for _, name := range updates {
-				fmt.Fprintln(c.App.Writer, name)
+				fmt.Fprintln(context.App.Writer, name)
 			}
-		} else if c.Bool("output-formatted-updated-list") {
-			fmt.Fprintln(c.App.Writer, formatNames(updates))
+		} else if context.Bool("output-formatted-updated-list") {
+			fmt.Fprintln(context.App.Writer, formatNames(updates))
 		}
 
 		return nil

@@ -1,6 +1,12 @@
 # Examples
 
-If Nixpkgs ever goes out of date in these examples, just run `yae update`!
+Run `yae update` inside an example directory to refresh its Nixpkgs hash.
+The source uses `type: binary` because the archive URL follows a moving branch;
+Yae rehashes that URL instead of discovering release tags. Both examples share
+one `yae.json` through a symbolic link.
+
+A moving URL may no longer match the saved hash when downloaded on a fresh
+machine. Run the update before evaluating the example in that case.
 
 ## [Nixpkgs](https://github.com/Fuwn/yae/tree/main/examples/nixpkgs)
 
@@ -11,7 +17,7 @@ Nixpkgs as a flake output.
 Note that the flake has no inputs. This is because Yae directly manages the
 Nixpkgs source.
 
-This example is extremely useful and is intended be adapted to suite the specific
+This example is extremely useful and is intended to be adapted to suit the specific
 needs of flake-less Nix configurations, like classic Nix shells and flake-less system
 configurations.
 
