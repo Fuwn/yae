@@ -95,21 +95,6 @@ func TestFailedSavePreservesDestination(t *testing.T) {
 	}
 }
 
-func TestFailedLoadPreservesEnvironment(t *testing.T) {
-	for _, contents := range []string{`{"$schema": false}`, `{} {}`, `{"source": false}`} {
-		path := filepath.Join(t.TempDir(), "sources.json")
-		environment := Environment{Schema: "unchanged"}
-
-		if err := os.WriteFile(path, []byte(contents), 0o600); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := environment.Load(path); err == nil || environment.Schema != "unchanged" {
-			t.Fatalf("invalid input changed environment: %#v, %v", environment, err)
-		}
-	}
-}
-
 func TestNewEnvironmentIsPrivate(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sources.json")
 	environment := Environment{}

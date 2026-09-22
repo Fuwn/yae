@@ -209,6 +209,10 @@ func TestUpdatePolicies(t *testing.T) {
 				t.Fatalf("updated = %#v, error = %v", updated, err)
 			}
 
+			if test.wantVersion == source.Version && updated != source {
+				t.Fatalf("unchanged content reported as changed: %#v", updated)
+			}
+
 			_, err = os.Stat(marker)
 
 			if (err == nil) != test.fetch {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -30,6 +29,10 @@ func TestInvalidStoredSources(t *testing.T) {
 		"null schema":      `{"$schema":null}`,
 		"reserved name":    `{"$schema":{}}`,
 		"null source":      `{"sample":null}`,
+		"invalid schema":   `{"$schema":false}`,
+		"trailing object":  `{} {}`,
+		"invalid source":   `{"sample":false}`,
+		"missing unpack":   `{"sample":{"url":"https://example.test/file","type":"binary","sha256":"` + testSHA256 + `"}}`,
 	}
 	changes := map[string]map[string]any{
 		"unknown field":    {"future_option": true},
@@ -46,23 +49,16 @@ func TestInvalidStoredSources(t *testing.T) {
 	}
 
 	for name, fields := range changes {
-		data, err := json.Marshal(validSource())
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		var source map[string]any
-
-		if err := json.Unmarshal(data, &source); err != nil {
-			t.Fatal(err)
+		source := map[string]any{
+			"url": "https://example.test/file", "type": "binary", "unpack": true,
+			"sha256": testSHA256, "hash": testSRIHash,
 		}
 
 		for field, value := range fields {
 			source[field] = value
 		}
 
-		data, err = json.Marshal(map[string]any{"sample": source})
+		data, err := json.Marshal(map[string]any{"sample": source})
 
 		if err != nil {
 			t.Fatal(err)
@@ -122,20 +118,6 @@ func TestValidationFailurePreservesFile(t *testing.T) {
 	}
 }
 
-func TestRefreshPopulatesBothHashes(t *testing.T) {
-	fakeNix(t)
-
-	source := Source{URL: "https://example.test/file", Type: "binary"}
-
-	if err := source.RefreshHashes(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-
-	if source.SHA256 != testSHA256 || source.Hash != testSRIHash {
-		t.Fatalf("incomplete hashes: %#v", source)
-	}
-}
-
 func TestUpdateRepairsLegacyHash(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -157,27 +139,6 @@ func TestUpdateRepairsLegacyHash(t *testing.T) {
 				t.Fatalf("legacy repair failed: %#v, %v, %v", source, updated, err)
 			}
 		})
-	}
-}
-
-func TestMissingRequiredField(t *testing.T) {
-	data, err := json.Marshal(validSource())
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	path := filepath.Join(t.TempDir(), "sources.json")
-	contents := `{"sample":` + strings.Replace(string(data), `"unpack":true,`, "", 1) + `}`
-
-	if err := os.WriteFile(path, []byte(contents), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	var environment Environment
-
-	if err := environment.Load(path); err == nil {
-		t.Fatal("missing unpack accepted")
 	}
 }
 

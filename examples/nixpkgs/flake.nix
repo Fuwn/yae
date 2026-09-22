@@ -2,7 +2,7 @@
   outputs =
     { self }:
     let
-      nixpkgs = (builtins.fromJSON (builtins.readFile "${self}/yae.json")).nixpkgs;
+      inherit (builtins.fromJSON (builtins.readFile "${self}/yae.json")) nixpkgs;
 
       systemsFlakeExposed = [
         "x86_64-linux"
@@ -40,7 +40,7 @@
               };
         in
         {
-          hello = pkgs.hello;
+          inherit (pkgs) hello;
         }
       );
     };

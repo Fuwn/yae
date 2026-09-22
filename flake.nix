@@ -42,7 +42,7 @@
           pname = name;
           version = "2025.11.29";
           src = pkgs.lib.cleanSource ./.;
-          vendorHash = "sha256-XQEB2vgiztbtLnc7BR4WTouPI+2NDQXXFUNidqmvbac=";
+          vendorHash = "sha256-TSpb8oiLdVlBpUCAlRXx+LQt8ZcZZslId02hP3qRRlA=";
           env.CGO_ENABLED = 0;
           nativeBuildInputs = [ pkgs.makeWrapper ];
           nativeCheckInputs = [
@@ -53,6 +53,18 @@
             "-w"
             "-X main.Version=${version}"
           ];
+
+          preBuild = ''
+            export HOME="$TMPDIR"
+          '';
+
+          checkPhase = ''
+            runHook preCheck
+            go test ./...
+            go vet ./...
+            test -z "$(gofmt -l *.go internal)"
+            runHook postCheck
+          '';
 
           postInstall = ''
             wrapProgram "$out/bin/yae" --prefix PATH : ${
@@ -83,11 +95,49 @@
 
         formatter = nixpkgs.legacyPackages."${system}".nixfmt;
 
+        checks = {
+          package = yae;
+          runtime = pkgs.runCommand "yae-runtime-check" { nativeBuildInputs = [ pkgs.go ]; } ''
+            export HOME="$TMPDIR" GOCACHE="$TMPDIR/go-cache" CGO_ENABLED=0
+            export YAE_TEST_BINARY=${yae}/bin/yae YAE_TEST_GIT=${pkgs.gitMinimal}/bin/git
+            go test -v ${./runtime_test.go} -run '^TestPackagedRuntime$'
+            touch "$out"
+          '';
+
+          nix =
+            pkgs.runCommand "yae-nix-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.deadnix
+                  pkgs.flake-checker
+                  pkgs.nixfmt
+                  pkgs.statix
+                  pkgs.actionlint
+                ];
+              }
+              ''
+                export HOME="$TMPDIR"
+
+                cd ${self}
+                deadnix --fail .
+                flake-checker -f
+                nixfmt --check flake.nix examples/*/flake.nix
+                statix check .
+                actionlint .github/workflows/check.yml
+                touch "$out"
+              '';
+        };
+
         devShells.default = pkgs.mkShell {
           packages = [
             pkgs.go
             pkgs.gitMinimal
             pkgs.nix
+            pkgs.deadnix
+            pkgs.flake-checker
+            pkgs.nixfmt
+            pkgs.statix
+            pkgs.actionlint
           ];
         };
       }

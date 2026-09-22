@@ -2,7 +2,7 @@
   outputs =
     { self }:
     let
-      nixpkgs = (builtins.fromJSON (builtins.readFile "${self}/yae.json")).nixpkgs;
+      inherit (builtins.fromJSON (builtins.readFile "${self}/yae.json")) nixpkgs;
 
       pkgs =
         import
@@ -13,6 +13,6 @@
           };
     in
     {
-      packages.${pkgs.system}.hello = pkgs.hello;
+      packages.${pkgs.system} = { inherit (pkgs) hello; };
     };
 }

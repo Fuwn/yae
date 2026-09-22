@@ -4,6 +4,7 @@ go 1.22.7
 
 require (
 	github.com/charmbracelet/log v0.4.0
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/urfave/cli/v2 v2.27.4
 )
 

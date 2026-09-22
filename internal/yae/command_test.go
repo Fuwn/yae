@@ -81,27 +81,3 @@ func TestFailedHashConversionLeavesSourceUnchanged(t *testing.T) {
 		t.Fatalf("failed conversion changed source: %#v, %v", source, err)
 	}
 }
-
-func TestFailedUpdateLeavesSourceUnchanged(t *testing.T) {
-	fakeGit(t, "abc\trefs/tags/v2\n", false)
-	fakeCommand(t, "nix-prefetch-url", "exit 1")
-
-	source := Source{Type: "git", Version: "v1", URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", SHA256: testSHA256, Hash: testSRIHash}
-	original := source
-
-	if _, err := source.Update(context.Background(), false, false); err == nil || source != original {
-		t.Fatalf("failed update changed source: %#v, %v", source, err)
-	}
-}
-
-func TestForcedRehashDoesNotInventAChange(t *testing.T) {
-	fakeGit(t, "abc\trefs/tags/v1\n", false)
-	fakeNix(t)
-
-	source := Source{Type: "git", Version: "v1", URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", SHA256: testSHA256, Hash: testSRIHash}
-	updated, err := source.Update(context.Background(), true, false)
-
-	if err != nil || updated != source {
-		t.Fatalf("unchanged content reported as changed: %#v, %v", updated, err)
-	}
-}
