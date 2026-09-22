@@ -19,13 +19,6 @@ func AddFlags() []cli.Flag {
 			Name:     "type",
 			Usage:    "Source type",
 			Required: true,
-			Action: func(c *cli.Context, value string) error {
-				if value != "binary" && value != "git" {
-					return fmt.Errorf("invalid source type: must be 'binary' or 'git'")
-				}
-
-				return nil
-			},
 		},
 		&cli.StringFlag{
 			Name:  "version",
@@ -60,52 +53,37 @@ func Add(sources *yae.Environment) func(c *cli.Context) error {
 			return fmt.Errorf("source already exists")
 		}
 
+		name := c.Args().Get(0)
+
+		if strings.TrimSpace(name) == "" || name == "$schema" {
+			return fmt.Errorf("source name must be non-empty and cannot be $schema")
+		}
+
 		source := yae.Source{
-			Unpack: c.Bool("unpack"),
-			Type:   c.String("type"),
-		}
-		version := c.String("version")
-
-		if version != "" {
-			source.URLTemplate = c.Args().Get(1)
-			source.Version = c.String("version")
-
-			if strings.Contains(source.URLTemplate, "{version}") {
-				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
-			} else {
-				return fmt.Errorf("version template must contain {version}")
-			}
-		} else {
-			source.URL = c.Args().Get(1)
+			URL:           c.Args().Get(1),
+			Unpack:        c.Bool("unpack"),
+			Type:          c.String("type"),
+			Version:       c.String("version"),
+			TagPredicate:  c.String("tag-predicate"),
+			TrimTagPrefix: c.String("trim-tag-prefix"),
+			Pinned:        c.Bool("pin"),
+			Force:         c.Bool("force"),
 		}
 
-		if source.Type == "git" && c.String("tag-predicate") != "" {
-			source.TagPredicate = c.String("tag-predicate")
+		if source.Version != "" {
+			source.URLTemplate = source.URL
+			source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 		}
 
-		if c.String("trim-tag-prefix") != "" {
-			source.TrimTagPrefix = c.String("trim-tag-prefix")
-		}
-
-		if c.Bool("pin") {
-			source.Pinned = true
-		}
-
-		if c.Bool("force") {
-			if source.Pinned {
-				return fmt.Errorf("cannot set a source to be statically forced and pinned at the same time")
-			}
-
-			source.Force = true
-		}
-
-		if sha256, err := yae.FetchSHA256(source.URL, c.Bool("unpack")); err != nil {
+		if err := source.Validate(); err != nil {
 			return err
-		} else {
-			source.SHA256 = sha256
 		}
 
-		if err := sources.Add(c.Args().Get(0), source); err != nil {
+		if err := source.RefreshHashes(); err != nil {
+			return err
+		}
+
+		if err := sources.Add(name, source); err != nil {
 			return err
 		}
 

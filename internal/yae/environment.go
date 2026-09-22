@@ -1,6 +1,7 @@
 package yae
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,8 +14,20 @@ type Environment struct {
 }
 
 func (environment *Environment) Add(name string, source Source) error {
+	if err := validateName(name); err != nil {
+		return err
+	}
+
+	if err := source.validateStored(); err != nil {
+		return fmt.Errorf("source %q: %w", name, err)
+	}
+
 	if environment.Exists(name) {
 		return fmt.Errorf("source already exists")
+	}
+
+	if environment.Sources == nil {
+		environment.Sources = make(map[string]Source)
 	}
 
 	environment.Sources[name] = source
@@ -36,6 +49,14 @@ func (environment *Environment) Save(path string) error {
 	contents := make(map[string]any, len(environment.Sources)+1)
 
 	for name, source := range environment.Sources {
+		if err := validateName(name); err != nil {
+			return err
+		}
+
+		if err := source.validateStored(); err != nil {
+			return fmt.Errorf("source %q: %w", name, err)
+		}
+
 		contents[name] = source
 	}
 
@@ -111,10 +132,18 @@ func (environment *Environment) Load(path string) error {
 		return err
 	}
 
+	if contents == nil {
+		return fmt.Errorf("environment must be a JSON object")
+	}
+
 	loaded := Environment{Sources: make(map[string]Source, len(contents))}
 
 	for name, data := range contents {
 		if name == "$schema" {
+			if bytes.Equal(bytes.TrimSpace(data), []byte("null")) {
+				return fmt.Errorf("$schema must be a string")
+			}
+
 			if err := json.Unmarshal(data, &loaded.Schema); err != nil {
 				return fmt.Errorf("invalid $schema: %w", err)
 			}
@@ -124,11 +153,33 @@ func (environment *Environment) Load(path string) error {
 
 		var source Source
 
-		if err := json.Unmarshal(data, &source); err != nil {
+		decoder := json.NewDecoder(bytes.NewReader(data))
+
+		decoder.DisallowUnknownFields()
+
+		if err := decoder.Decode(&source); err != nil {
 			return fmt.Errorf("source %q: %w", name, err)
 		}
 
-		loaded.Sources[name] = source
+		var fields map[string]json.RawMessage
+
+		if err := json.Unmarshal(data, &fields); err != nil {
+			return fmt.Errorf("source %q: %w", name, err)
+		}
+
+		if _, exists := fields["unpack"]; !exists {
+			return fmt.Errorf("source %q: missing unpack", name)
+		}
+
+		for field, value := range fields {
+			if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+				return fmt.Errorf("source %q: null %s", name, field)
+			}
+		}
+
+		if err := loaded.Add(name, source); err != nil {
+			return err
+		}
 	}
 
 	*environment = loaded

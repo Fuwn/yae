@@ -37,7 +37,7 @@ func (source *Source) Update(sources *Environment, name string, force bool, forc
 	if source.Pinned && !forcePinned {
 		log.Infof("skipped %s: source is pinned", name)
 
-		return updated, nil
+		return source.repairHash(sources, name)
 	}
 
 	if source.Type == "git" {
@@ -68,29 +68,19 @@ func (source *Source) Update(sources *Environment, name string, force bool, forc
 		} else {
 			log.Infof("skipped %s: version remains unchanged", name)
 
-			return updated, nil
+			return source.repairHash(sources, name)
 		}
 	}
 
 	log.Debugf("checking %s: sha256", name)
 
-	sha256, err := FetchSHA256(source.URL, source.Unpack)
+	previousSHA256, previousHash := source.SHA256, source.Hash
 
-	if err != nil {
-		return updated, err
+	if err := source.RefreshHashes(); err != nil {
+		return false, err
 	}
 
-	sriHash, err := FetchSRIHash(sha256)
-
-	if err != nil {
-		return updated, err
-	}
-
-	if sha256 != source.SHA256 || sriHash != source.Hash || force {
-		log.Infof("rehashed %s: %s -> %s", name, source.SHA256, sha256)
-
-		source.SHA256 = sha256
-		source.Hash = sriHash
+	if source.SHA256 != previousSHA256 || source.Hash != previousHash {
 		updated = true
 	}
 
@@ -181,4 +171,40 @@ func repositoryURL(address string) (string, error) {
 	parsed.Fragment = ""
 
 	return parsed.String(), nil
+}
+
+func (source *Source) RefreshHashes() error {
+	sha256, err := FetchSHA256(source.URL, source.Unpack)
+
+	if err != nil {
+		return err
+	}
+
+	hash, err := FetchSRIHash(sha256)
+
+	if err != nil {
+		return err
+	}
+
+	source.SHA256 = sha256
+	source.Hash = hash
+
+	return nil
+}
+
+func (source *Source) repairHash(environment *Environment, name string) (bool, error) {
+	if source.Hash != "" {
+		return false, nil
+	}
+
+	hash, err := FetchSRIHash(source.SHA256)
+
+	if err != nil {
+		return false, err
+	}
+
+	source.Hash = hash
+	environment.Sources[name] = *source
+
+	return true, nil
 }
