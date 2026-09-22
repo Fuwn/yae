@@ -78,7 +78,7 @@ func (environment *Environment) Save(path string) error {
 		return err
 	}
 
-	mode := os.FileMode(0o644)
+	mode := os.FileMode(0o600)
 
 	if information, err := os.Stat(path); err == nil {
 		if !information.Mode().IsRegular() {

@@ -109,3 +109,18 @@ func TestFailedLoadPreservesEnvironment(t *testing.T) {
 		}
 	}
 }
+
+func TestNewEnvironmentIsPrivate(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "sources.json")
+	environment := Environment{}
+
+	if err := environment.Save(path); err != nil {
+		t.Fatal(err)
+	}
+
+	information, err := os.Stat(path)
+
+	if err != nil || information.Mode().Perm() != 0o600 {
+		t.Fatalf("new environment permissions are not private: %v", err)
+	}
+}
