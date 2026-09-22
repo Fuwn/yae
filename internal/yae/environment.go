@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type Environment struct {
@@ -11,82 +12,126 @@ type Environment struct {
 	Sources map[string]Source
 }
 
-func (s *Environment) Add(name string, d Source) error {
-	if s.Exists(name) {
+func (environment *Environment) Add(name string, source Source) error {
+	if environment.Exists(name) {
 		return fmt.Errorf("source already exists")
 	}
 
-	(*s).Sources[name] = d
+	environment.Sources[name] = source
 
 	return nil
 }
 
-func (s *Environment) Exists(name string) bool {
-	_, ok := (*s).Sources[name]
+func (environment *Environment) Exists(name string) bool {
+	_, exists := environment.Sources[name]
 
-	return ok
+	return exists
 }
 
-func (s *Environment) Drop(url string) {
-	delete((*s).Sources, url)
+func (environment *Environment) Drop(name string) {
+	delete(environment.Sources, name)
 }
 
-func (s *Environment) Save(path string) error {
-	file, err := os.Create(path)
+func (environment *Environment) Save(path string) error {
+	contents := make(map[string]any, len(environment.Sources)+1)
+
+	for name, source := range environment.Sources {
+		contents[name] = source
+	}
+
+	if environment.Schema != "" {
+		contents["$schema"] = environment.Schema
+	}
+
+	data, err := json.MarshalIndent(contents, "", "  ")
 
 	if err != nil {
 		return err
 	}
 
+	mode := os.FileMode(0o644)
+
+	if information, err := os.Stat(path); err == nil {
+		if !information.Mode().IsRegular() {
+			return fmt.Errorf("sources path must be a regular file")
+		}
+
+		mode = information.Mode().Perm()
+		path, err = filepath.EvalSymlinks(path)
+
+		if err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	} else if _, err := os.Lstat(path); err == nil {
+		return fmt.Errorf("sources path is a dangling symbolic link")
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	file, err := os.CreateTemp(filepath.Dir(path), ".yae-*")
+
+	if err != nil {
+		return err
+	}
+
+	defer os.Remove(file.Name())
 	defer file.Close()
 
-	sourcesData, err := json.Marshal(s.Sources)
-
-	if err != nil {
+	if err := file.Chmod(mode); err != nil {
 		return err
 	}
 
-	var jsonData map[string]json.RawMessage
-
-	if err := json.Unmarshal(sourcesData, &jsonData); err != nil {
+	if _, err := file.Write(append(data, '\n')); err != nil {
 		return err
 	}
 
-	if s.Schema != "" {
-		jsonData["$schema"] = json.RawMessage(fmt.Sprintf(`"%s"`, s.Schema))
+	if err := file.Sync(); err != nil {
+		return err
 	}
 
-	encoder := json.NewEncoder(file)
+	if err := file.Close(); err != nil {
+		return err
+	}
 
-	encoder.SetIndent("", "  ")
-
-	return encoder.Encode(jsonData)
+	return os.Rename(file.Name(), path)
 }
 
-func (s *Environment) Load(path string) error {
-	file, err := os.Open(path)
+func (environment *Environment) Load(path string) error {
+	data, err := os.ReadFile(path)
 
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
+	var contents map[string]json.RawMessage
 
-	var rawData map[string]json.RawMessage
-
-	if err := json.NewDecoder(file).Decode(&rawData); err != nil {
+	if err := json.Unmarshal(data, &contents); err != nil {
 		return err
 	}
 
-	if schema, ok := rawData["$schema"]; ok {
-		json.Unmarshal(schema, &s.Schema)
+	loaded := Environment{Sources: make(map[string]Source, len(contents))}
+
+	for name, data := range contents {
+		if name == "$schema" {
+			if err := json.Unmarshal(data, &loaded.Schema); err != nil {
+				return fmt.Errorf("invalid $schema: %w", err)
+			}
+
+			continue
+		}
+
+		var source Source
+
+		if err := json.Unmarshal(data, &source); err != nil {
+			return fmt.Errorf("source %q: %w", name, err)
+		}
+
+		loaded.Sources[name] = source
 	}
 
-	delete(rawData, "$schema")
+	*environment = loaded
 
-	if filteredData, err := json.Marshal(rawData); err != nil {
-		return err
-	} else {
-		return json.Unmarshal(filteredData, &s.Sources)
-	}
+	return nil
 }
