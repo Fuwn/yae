@@ -1,12 +1,11 @@
 package yae
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
-
-	"github.com/charmbracelet/log"
 )
 
 type Source struct {
@@ -23,73 +22,34 @@ type Source struct {
 	Force         bool   `json:"force,omitempty"`
 }
 
-func (source *Source) Update(sources *Environment, name string, force bool, forcePinned bool) (bool, error) {
-	log.Infof("checking %s", name)
-
-	updated := false
-
-	if !sources.Exists(name) {
-		log.Warnf("skipped %s: source does not exist", name)
-
-		return updated, nil
-	}
-
+func (source Source) Update(context context.Context, forceHash bool, forcePinned bool) (Source, error) {
 	if source.Pinned && !forcePinned {
-		log.Infof("skipped %s: source is pinned", name)
-
-		return source.repairHash(sources, name)
+		return source.repairHash(context)
 	}
 
 	if source.Type == "git" {
-		log.Debugf("checking %s: remote git tag", name)
-
-		tag, err := source.fetchLatestGitTag()
+		tag, err := source.fetchLatestGitTag(context)
 
 		if err != nil {
-			return updated, err
+			return Source{}, err
 		}
 
-		if tag != source.Version || force || source.Force {
-			if tag != source.Version {
-				log.Infof("bumped %s: %s -> %s", name, source.Version, tag)
-			}
-
-			if tag != source.Version {
-				updated = true
-			}
-
-			source.Version = tag
-
-			if strings.Contains(source.URLTemplate, "{version}") {
-				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
-
-				log.Debugf("patched %s: substituted url template", name)
-			}
-		} else {
-			log.Infof("skipped %s: version remains unchanged", name)
-
-			return source.repairHash(sources, name)
+		if tag == source.Version && !forceHash && !source.Force {
+			return source.repairHash(context)
 		}
+
+		source.Version = tag
+		source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", tag)
 	}
 
-	log.Debugf("checking %s: sha256", name)
-
-	previousSHA256, previousHash := source.SHA256, source.Hash
-
-	if err := source.RefreshHashes(); err != nil {
-		return false, err
+	if err := source.RefreshHashes(context); err != nil {
+		return Source{}, err
 	}
 
-	if source.SHA256 != previousSHA256 || source.Hash != previousHash {
-		updated = true
-	}
-
-	(*sources).Sources[name] = *source
-
-	return updated, nil
+	return source, nil
 }
 
-func (source *Source) fetchLatestGitTag() (string, error) {
+func (source *Source) fetchLatestGitTag(context context.Context) (string, error) {
 	if source.Type != "git" {
 		return "", fmt.Errorf("source is not a git repository")
 	}
@@ -106,7 +66,7 @@ func (source *Source) fetchLatestGitTag() (string, error) {
 		return "", fmt.Errorf("invalid tag_predicate: %w", err)
 	}
 
-	output, err := command("git", false, "ls-remote", "--tags", "--refs", "--sort=-version:refname", "--", repository)
+	output, err := command(context, "git", "ls-remote", "--tags", "--refs", "--sort=-version:refname", "--", repository)
 
 	if err != nil {
 		return "", fmt.Errorf("list remote tags: %w", err)
@@ -173,14 +133,14 @@ func repositoryURL(address string) (string, error) {
 	return parsed.String(), nil
 }
 
-func (source *Source) RefreshHashes() error {
-	sha256, err := FetchSHA256(source.URL, source.Unpack)
+func (source *Source) RefreshHashes(context context.Context) error {
+	sha256, err := fetchSHA256(context, source.URL, source.Unpack)
 
 	if err != nil {
 		return err
 	}
 
-	hash, err := FetchSRIHash(sha256)
+	hash, err := fetchSRIHash(context, sha256)
 
 	if err != nil {
 		return err
@@ -192,19 +152,18 @@ func (source *Source) RefreshHashes() error {
 	return nil
 }
 
-func (source *Source) repairHash(environment *Environment, name string) (bool, error) {
+func (source Source) repairHash(context context.Context) (Source, error) {
 	if source.Hash != "" {
-		return false, nil
+		return source, nil
 	}
 
-	hash, err := FetchSRIHash(source.SHA256)
+	hash, err := fetchSRIHash(context, source.SHA256)
 
 	if err != nil {
-		return false, err
+		return Source{}, err
 	}
 
 	source.Hash = hash
-	environment.Sources[name] = *source
 
-	return true, nil
+	return source, nil
 }

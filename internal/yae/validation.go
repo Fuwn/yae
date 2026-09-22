@@ -81,13 +81,17 @@ func (source Source) validateStored() error {
 		return nil
 	}
 
-	if !strings.HasPrefix(source.Hash, "sha256-") {
+	return validateSRIHash(source.Hash)
+}
+
+func validateSRIHash(hash string) error {
+	if !strings.HasPrefix(hash, "sha256-") {
 		return fmt.Errorf("hash must be a SHA-256 SRI hash")
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(source.Hash, "sha256-"))
+	decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(hash, "sha256-"))
 
-	if err != nil || len(decoded) != 32 || "sha256-"+base64.StdEncoding.EncodeToString(decoded) != source.Hash {
+	if err != nil || len(decoded) != 32 || "sha256-"+base64.StdEncoding.EncodeToString(decoded) != hash {
 		return fmt.Errorf("hash must be a SHA-256 SRI hash")
 	}
 

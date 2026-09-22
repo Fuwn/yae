@@ -1,9 +1,9 @@
 package yae
 
 import (
+	"context"
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,21 +19,9 @@ func validSource() Source {
 func fakeNix(t *testing.T) {
 	t.Helper()
 
-	shell, err := exec.LookPath("sh")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	directory := t.TempDir()
-
 	for name, output := range map[string]string{"nix-prefetch-url": testSHA256, "nix": testSRIHash} {
-		if err := os.WriteFile(filepath.Join(directory, name), []byte("#!"+shell+"\nprintf '%s\\n' '"+output+"'\n"), 0o755); err != nil {
-			t.Fatal(err)
-		}
+		fakeCommand(t, name, "printf '%s\\n' '"+output+"'")
 	}
-
-	t.Setenv("PATH", directory+string(os.PathListSeparator)+os.Getenv("PATH"))
 }
 
 func TestInvalidStoredSources(t *testing.T) {
@@ -99,7 +87,7 @@ func TestInvalidStoredSources(t *testing.T) {
 	}
 }
 
-func TestAddInitialisesMapAndRejectsReservedName(t *testing.T) {
+func TestAddInitializesMapAndRejectsReservedName(t *testing.T) {
 	environment := Environment{}
 
 	if err := environment.Add("$schema", validSource()); err == nil {
@@ -139,7 +127,7 @@ func TestRefreshPopulatesBothHashes(t *testing.T) {
 
 	source := Source{URL: "https://example.test/file", Type: "binary"}
 
-	if err := source.RefreshHashes(); err != nil {
+	if err := source.RefreshHashes(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -149,16 +137,23 @@ func TestRefreshPopulatesBothHashes(t *testing.T) {
 }
 
 func TestUpdateRepairsLegacyHash(t *testing.T) {
-	for _, pinned := range []bool{false, true} {
-		t.Run(map[bool]string{false: "unchanged version", true: "pinned"}[pinned], func(t *testing.T) {
+	cases := []struct {
+		name   string
+		pinned bool
+	}{
+		{name: "unchanged version"},
+		{name: "pinned", pinned: true},
+	}
+
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
 			fakeNix(t)
 			fakeGit(t, "abc\trefs/tags/v1\n", false)
 
-			source := Source{URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", Version: "v1", Type: "git", SHA256: testSHA256, Pinned: pinned}
-			environment := Environment{Sources: map[string]Source{"sample": source}}
-			updated, err := source.Update(&environment, "sample", false, false)
+			source := Source{URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", Version: "v1", Type: "git", SHA256: testSHA256, Pinned: test.pinned}
+			updated, err := source.Update(context.Background(), false, false)
 
-			if err != nil || !updated || source.Hash != testSRIHash || source.SHA256 != testSHA256 || source.Version != "v1" {
+			if err != nil || updated.Hash != testSRIHash || updated.SHA256 != testSHA256 || updated.Version != "v1" {
 				t.Fatalf("legacy repair failed: %#v, %v, %v", source, updated, err)
 			}
 		})

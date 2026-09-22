@@ -79,7 +79,7 @@ func Add(sources *yae.Environment) func(c *cli.Context) error {
 			return err
 		}
 
-		if err := source.RefreshHashes(); err != nil {
+		if err := source.RefreshHashes(c.Context); err != nil {
 			return err
 		}
 

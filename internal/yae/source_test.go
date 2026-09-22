@@ -1,8 +1,8 @@
 package yae
 
 import (
+	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,25 +11,14 @@ import (
 func fakeGit(t *testing.T, output string, failure bool) string {
 	t.Helper()
 
-	shell, err := exec.LookPath("sh")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	directory := t.TempDir()
-	arguments := filepath.Join(directory, "arguments")
-	script := "#!" + shell + "\nprintf '%s\\n' \"$@\" > \"$YAE_TEST_ARGUMENTS\"\nprintf '%s' \"$YAE_TEST_TAGS\"\n"
+	arguments := filepath.Join(t.TempDir(), "arguments")
+	script := "printf '%s\\n' \"$@\" > \"$YAE_TEST_ARGUMENTS\"\nprintf '%s' \"$YAE_TEST_TAGS\"\n"
 
 	if failure {
 		script += "exit 23\n"
 	}
 
-	if err := os.WriteFile(filepath.Join(directory, "git"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	t.Setenv("PATH", directory+string(os.PathListSeparator)+os.Getenv("PATH"))
+	fakeCommand(t, "git", script)
 	t.Setenv("YAE_TEST_ARGUMENTS", arguments)
 	t.Setenv("YAE_TEST_TAGS", output)
 
@@ -61,7 +50,7 @@ func TestLatestGitTag(t *testing.T) {
 			fakeGit(t, test.output, test.failure)
 
 			source := Source{Type: "git", URL: "https://example.test/owner/repo/archive/v0.tar.gz", TagPredicate: test.predicate, TrimTagPrefix: test.prefix}
-			version, err := source.fetchLatestGitTag()
+			version, err := source.fetchLatestGitTag(context.Background())
 
 			if test.want == "" {
 				if err == nil {
@@ -82,7 +71,7 @@ func TestGitURLIsAnArgument(t *testing.T) {
 	arguments := fakeGit(t, "abc\trefs/tags/v1\n", false)
 	source := Source{Type: "git", URL: "https://example.test/$(printf${IFS}INJECTED)/repo"}
 
-	if _, err := source.fetchLatestGitTag(); err != nil {
+	if _, err := source.fetchLatestGitTag(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -123,6 +112,68 @@ func TestRepositoryURL(t *testing.T) {
 
 			if got != test.want || (err != nil) != (test.want == "") {
 				t.Fatalf("repository = %q, error = %v; want %q", got, err, test.want)
+			}
+		})
+	}
+}
+
+func TestUpdatePolicies(t *testing.T) {
+	cases := []struct {
+		name        string
+		kind        string
+		version     string
+		pinned      bool
+		persistent  bool
+		forceHash   bool
+		forcePinned bool
+		fetch       bool
+		wantVersion string
+	}{
+		{name: "floating URL", kind: "binary", fetch: true},
+		{name: "pinned URL", kind: "binary", pinned: true},
+		{name: "forced pinned URL", kind: "binary", pinned: true, forcePinned: true, fetch: true},
+		{name: "unchanged tag", kind: "git", version: "v2", wantVersion: "v2"},
+		{name: "new tag", kind: "git", version: "v1", fetch: true, wantVersion: "v2"},
+		{name: "persistent rehash", kind: "git", version: "v2", persistent: true, fetch: true, wantVersion: "v2"},
+		{name: "requested rehash", kind: "git", version: "v2", forceHash: true, fetch: true, wantVersion: "v2"},
+		{name: "pin overrides rehash", kind: "git", version: "v1", pinned: true, forceHash: true, wantVersion: "v1"},
+		{name: "override pin", kind: "git", version: "v1", pinned: true, forcePinned: true, fetch: true, wantVersion: "v2"},
+		{name: "pin override alone skips unchanged tag", kind: "git", version: "v2", pinned: true, forcePinned: true, wantVersion: "v2"},
+		{name: "both overrides", kind: "git", version: "v2", pinned: true, forcePinned: true, forceHash: true, fetch: true, wantVersion: "v2"},
+	}
+
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			fakeGit(t, "abc\trefs/tags/v2\n", false)
+			fakeNix(t)
+
+			marker := filepath.Join(t.TempDir(), "prefetched")
+
+			t.Setenv("YAE_TEST_PREFETCH", marker)
+			fakeCommand(t, "nix-prefetch-url", "printf fetched > \"$YAE_TEST_PREFETCH\"\nprintf '%s\\n' '"+testSHA256+"'")
+
+			source := validSource()
+
+			source.Type = test.kind
+			source.Pinned = test.pinned
+			source.Force = test.persistent
+
+			if test.kind == "git" {
+				source.Version = test.version
+				source.URLTemplate = "https://example.test/owner/repo/archive/{version}"
+				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", test.version)
+			}
+
+			updated, err := source.Update(context.Background(), test.forceHash, test.forcePinned)
+
+			if err != nil || updated.Version != test.wantVersion {
+				t.Fatalf("updated = %#v, error = %v", updated, err)
+			}
+
+			_, err = os.Stat(marker)
+
+			if (err == nil) != test.fetch {
+				t.Fatalf("fetch occurred = %v; want %v", err == nil, test.fetch)
 			}
 		})
 	}
