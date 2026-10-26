@@ -5,14 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/Fuwn/yae/internal/fixture"
 )
-
-const testSHA256 = "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy"
-const testSRIHash = "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI="
-
-func validSource() Source {
-	return Source{URL: "https://example.test/file", SHA256: testSHA256, Hash: testSRIHash, Type: "binary", Unpack: true}
-}
 
 func TestInvalidStoredSources(t *testing.T) {
 	cases := map[string]string{
@@ -41,7 +36,7 @@ func TestInvalidStoredSources(t *testing.T) {
 	for name, fields := range changes {
 		source := map[string]any{
 			"url": "https://example.test/file", "type": "binary", "unpack": true,
-			"sha256": testSHA256, "hash": testSRIHash,
+			"sha256": fixture.SHA256, "hash": fixture.SRIHash,
 		}
 
 		for field, value := range fields {

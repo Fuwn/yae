@@ -7,24 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/Fuwn/yae/internal/fixture"
 )
-
-func fakeGit(t *testing.T, output string, failure bool) string {
-	t.Helper()
-
-	arguments := filepath.Join(t.TempDir(), "arguments")
-	script := "printf '%s\\n' \"$@\" > \"$YAE_TEST_ARGUMENTS\"\nprintf '%s' \"$YAE_TEST_TAGS\"\n"
-
-	if failure {
-		script += "exit 23\n"
-	}
-
-	fakeCommand(t, "git", script)
-	t.Setenv("YAE_TEST_ARGUMENTS", arguments)
-	t.Setenv("YAE_TEST_TAGS", output)
-
-	return arguments
-}
 
 func TestLatestGitTag(t *testing.T) {
 	cases := []struct {
@@ -186,7 +171,7 @@ func TestUpdatePolicies(t *testing.T) {
 			marker := filepath.Join(t.TempDir(), "prefetched")
 
 			t.Setenv("YAE_TEST_PREFETCH", marker)
-			fakeCommand(t, "nix-prefetch-url", "printf fetched > \"$YAE_TEST_PREFETCH\"\nprintf '%s\\n' '"+testSHA256+"'")
+			fixture.Command(t, "nix-prefetch-url", "printf fetched > \"$YAE_TEST_PREFETCH\"\nprintf '%s\\n' '"+fixture.SHA256+"'")
 
 			source := validSource()
 

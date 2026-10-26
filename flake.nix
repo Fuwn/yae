@@ -97,10 +97,33 @@
 
         checks = {
           package = yae;
-          runtime = pkgs.runCommand "yae-runtime-check" { nativeBuildInputs = [ pkgs.go ]; } ''
-            export HOME="$TMPDIR" GOCACHE="$TMPDIR/go-cache" CGO_ENABLED=0
-            export YAE_TEST_BINARY=${yae}/bin/yae YAE_TEST_GIT=${pkgs.gitMinimal}/bin/git
-            go test -v ${./runtime_test.go} -run '^TestPackagedRuntime$'
+          runtime = pkgs.runCommand "yae-runtime-check" { nativeBuildInputs = [ pkgs.gitMinimal ]; } ''
+            export HOME="$TMPDIR" NIX_REMOTE="local?root=$TMPDIR/nix" NIX_CONF_DIR="$TMPDIR/config"
+            export NIX_USER_CONF_FILES= NIX_CONFIG="build-users-group =" GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+
+            sources="$TMPDIR/sources.json"
+            repository="$TMPDIR/repository"
+            sha256=1n8lvnnjp3g8a2bj9msjxibi7sjfq9570vyyjr6pl6wi4xqxrbdx
+            hash=sha256-va3ccSeRG3pNlt5vcErCTuoTV+xS1ySXUOiNK63dFNk=
+
+            # An empty PATH proves that the wrapper supplies Git and Nix.
+            yae() { PATH= ${yae}/bin/yae --sources "$sources" "$@"; }
+
+            yae init
+            printf 'first payload' > "$TMPDIR/payload"
+            yae add --type binary --unpack=false sample "file://$TMPDIR/payload"
+            grep -qF "\"hash\": \"$hash\"" "$sources"
+
+            git init --quiet --bare "$repository"
+            commit=$(git -C "$repository" -c user.name=Yae -c user.email=yae@example.test commit-tree "$(git -C "$repository" mktree < /dev/null)" -m fixture)
+            git -C "$repository" update-ref refs/tags/v10 "$commit"
+
+            export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="url.file://$repository.insteadOf" GIT_CONFIG_VALUE_0=https://example.test/owner/repository
+            printf '{"current": {"url": "%s", "url_template": "%s", "version": "v10", "type": "git", "unpack": false, "sha256": "%s", "hash": "%s"}}' \
+              https://example.test/owner/repository/archive/v10 \
+              'https://example.test/owner/repository/archive/{version}' \
+              "$sha256" "$hash" > "$sources"
+            test -z "$(yae update --output-updated-list)"
             touch "$out"
           '';
 

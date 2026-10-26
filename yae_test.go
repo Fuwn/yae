@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/Fuwn/yae/internal/fixture"
 	"github.com/Fuwn/yae/internal/yae"
 )
-
-const fixtureSHA256 = "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy"
-const fixtureSRIHash = "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI="
 
 func runCLI(t *testing.T, path string, arguments ...string) (string, string, error) {
 	t.Helper()
@@ -31,26 +28,8 @@ func runCLI(t *testing.T, path string, arguments ...string) (string, string, err
 
 func installFixtureCommands(t *testing.T) {
 	t.Helper()
-
-	shell, err := exec.LookPath("sh")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	directory := t.TempDir()
-	commands := map[string]string{
-		"git":              "printf 'abc\\trefs/tags/v2\\n'",
-		"nix-prefetch-url": "case \"$*\" in *fail*) printf 'fetch failed' >&2; exit 23;; esac\nprintf '%s\\n' '" + fixtureSHA256 + "'",
-	}
-
-	for name, body := range commands {
-		if err := os.WriteFile(filepath.Join(directory, name), []byte("#!"+shell+"\n"+body+"\n"), 0o755); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	t.Setenv("PATH", directory+string(os.PathListSeparator)+os.Getenv("PATH"))
+	fixture.Command(t, "git", "printf 'abc\\trefs/tags/v2\\n'")
+	fixture.Command(t, "nix-prefetch-url", "case \"$*\" in *fail*) printf 'fetch failed' >&2; exit 23;; esac\nprintf '%s\\n' '"+fixture.SHA256+"'")
 }
 
 func readSources(t *testing.T, path string) yae.Environment {
@@ -93,7 +72,7 @@ func TestCommandLifecycle(t *testing.T) {
 	environment := readSources(t, path)
 
 	for name, source := range environment.Sources {
-		if source.SHA256 != fixtureSHA256 || source.Hash != fixtureSRIHash {
+		if source.SHA256 != fixture.SHA256 || source.Hash != fixture.SRIHash {
 			t.Fatalf("%s was added with incomplete hashes: %#v", name, source)
 		}
 	}
