@@ -21,7 +21,7 @@
         pkgs:
         pkgs.buildGoModule rec {
           pname = "yae";
-          version = "2025.11.29";
+          version = "2026.10.26";
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-CAQbD3gfKCUoB7nT7i/4J2ymkua+LmFT0CDAqoHX4AA=";
           env.CGO_ENABLED = 0;
