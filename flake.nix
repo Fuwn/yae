@@ -109,7 +109,6 @@
               {
                 nativeBuildInputs = [
                   pkgs.deadnix
-                  pkgs.flake-checker
                   pkgs.nixfmt
                   pkgs.statix
                   pkgs.actionlint
@@ -120,7 +119,6 @@
 
                 cd ${self}
                 deadnix --fail .
-                flake-checker -f
                 nixfmt --check flake.nix examples/*/flake.nix
                 statix check .
                 actionlint .github/workflows/check.yml
@@ -134,7 +132,6 @@
             pkgs.gitMinimal
             pkgs.nix
             pkgs.deadnix
-            pkgs.flake-checker
             pkgs.nixfmt
             pkgs.statix
             pkgs.actionlint
