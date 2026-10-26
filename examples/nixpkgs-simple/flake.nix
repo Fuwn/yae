@@ -13,6 +13,6 @@
           };
     in
     {
-      packages.${pkgs.system} = { inherit (pkgs) hello; };
+      packages.${pkgs.stdenv.hostPlatform.system} = { inherit (pkgs) hello; };
     };
 }

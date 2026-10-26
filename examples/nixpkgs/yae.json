@@ -1,9 +1,12 @@
 {
   "nixpkgs": {
-    "url": "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz",
-    "sha256": "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy",
-    "hash": "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI=",
+    "url": "https://github.com/NixOS/nixpkgs/archive/26.05.tar.gz",
+    "sha256": "0am8xx09fx5yf2p0wb001v0jx1g5hrfb76h4r37xph378jgk7pcr",
+    "hash": "sha256-md0zn0RnwNvPyASas1yG5YUuwQ4ALA6ucL50l0DvqCo=",
     "unpack": true,
-    "type": "binary"
+    "type": "git",
+    "version": "26.05",
+    "url_template": "https://github.com/NixOS/nixpkgs/archive/{version}.tar.gz",
+    "tag_predicate": "^[0-9]{2}\\.[0-9]{2}$"
   }
 }
