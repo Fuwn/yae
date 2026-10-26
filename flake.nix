@@ -1,53 +1,32 @@
 {
   description = "Nix Dependency Manager";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-    systems.url = "github:nix-systems/default";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
 
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-      inputs.systems.follows = "systems";
-    };
-  };
-
+  # Tsutsumi calls these outputs directly with its own arguments and a plain
+  # store path as self, so do not add inputs or read flake metadata from self.
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        name = "yae";
+    { self, nixpkgs, ... }:
+    let
+      forEachSystem =
+        function:
+        nixpkgs.lib.genAttrs [
+          "aarch64-darwin"
+          "aarch64-linux"
+          "x86_64-darwin"
+          "x86_64-linux"
+        ] (system: function nixpkgs.legacyPackages.${system});
 
-        meta = with pkgs.lib; {
-          description = "Nix Dependency Manager";
-          homepage = "https://github.com/Fuwn/${name}";
-          license = [
-            licenses.mit
-            licenses.asl20
-          ];
-          maintainers = [ maintainers.Fuwn ];
-          mainProgram = name;
-          platforms = platforms.unix;
-        };
-
-        yae = pkgs.buildGoModule rec {
-          inherit meta;
-
-          pname = name;
+      yaeFor =
+        pkgs:
+        pkgs.buildGoModule rec {
+          pname = "yae";
           version = "2025.11.29";
           src = pkgs.lib.cleanSource ./.;
           vendorHash = "sha256-CAQbD3gfKCUoB7nT7i/4J2ymkua+LmFT0CDAqoHX4AA=";
           env.CGO_ENABLED = 0;
           nativeBuildInputs = [ pkgs.makeWrapper ];
-          nativeCheckInputs = [
-            pkgs.gitMinimal
-          ];
+          nativeCheckInputs = [ pkgs.gitMinimal ];
           ldflags = [
             "-s"
             "-w"
@@ -74,29 +53,50 @@
               ]
             }
           '';
-        };
-      in
-      {
-        packages = {
-          default = yae;
-          ${name} = self.packages.${system}.default;
-        };
 
-        apps = {
-          default = {
-            inherit meta;
-
-            type = "app";
-            program = "${self.packages.${system}.default}/bin/${name}";
+          meta = {
+            description = "Nix Dependency Manager";
+            homepage = "https://github.com/Fuwn/yae";
+            license = [
+              pkgs.lib.licenses.mit
+              pkgs.lib.licenses.asl20
+            ];
+            maintainers = [ pkgs.lib.maintainers.Fuwn ];
+            mainProgram = "yae";
+            platforms = pkgs.lib.platforms.unix;
           };
-
-          ${name} = self.apps.${system}.default;
         };
 
-        formatter = nixpkgs.legacyPackages."${system}".nixfmt;
+      nixCheckTools = pkgs: [
+        pkgs.deadnix
+        pkgs.nixfmt
+        pkgs.statix
+        pkgs.actionlint
+      ];
+    in
+    {
+      packages = forEachSystem (
+        pkgs:
+        let
+          yae = yaeFor pkgs;
+        in
+        {
+          inherit yae;
 
-        checks = {
+          default = yae;
+        }
+      );
+
+      formatter = forEachSystem (pkgs: pkgs.nixfmt);
+
+      checks = forEachSystem (
+        pkgs:
+        let
+          yae = yaeFor pkgs;
+        in
+        {
           package = yae;
+
           runtime = pkgs.runCommand "yae-runtime-check" { nativeBuildInputs = [ pkgs.gitMinimal ]; } ''
             export HOME="$TMPDIR" NIX_REMOTE="local?root=$TMPDIR/nix" NIX_CONF_DIR="$TMPDIR/config"
             export NIX_USER_CONF_FILES= NIX_CONFIG="build-users-group =" GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
@@ -127,39 +127,28 @@
             touch "$out"
           '';
 
-          nix =
-            pkgs.runCommand "yae-nix-check"
-              {
-                nativeBuildInputs = [
-                  pkgs.deadnix
-                  pkgs.nixfmt
-                  pkgs.statix
-                  pkgs.actionlint
-                ];
-              }
-              ''
-                export HOME="$TMPDIR"
+          nix = pkgs.runCommand "yae-nix-check" { nativeBuildInputs = nixCheckTools pkgs; } ''
+            export HOME="$TMPDIR"
 
-                cd ${self}
-                deadnix --fail .
-                nixfmt --check flake.nix examples/*/flake.nix
-                statix check .
-                actionlint .github/workflows/check.yml
-                touch "$out"
-              '';
-        };
+            cd ${self}
+            deadnix --fail .
+            nixfmt --check flake.nix examples/*/flake.nix
+            statix check .
+            actionlint .github/workflows/check.yml
+            touch "$out"
+          '';
+        }
+      );
 
-        devShells.default = pkgs.mkShell {
+      devShells = forEachSystem (pkgs: {
+        default = pkgs.mkShell {
           packages = [
             pkgs.go
             pkgs.gitMinimal
             pkgs.nix
-            pkgs.deadnix
-            pkgs.nixfmt
-            pkgs.statix
-            pkgs.actionlint
-          ];
+          ]
+          ++ nixCheckTools pkgs;
         };
-      }
-    );
+      });
+    };
 }
