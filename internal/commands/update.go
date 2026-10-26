@@ -46,11 +46,6 @@ func Update(sources *yae.Environment) func(context *cli.Context) error {
 		sort.Strings(names)
 
 		updates := []string{}
-		pending := yae.Environment{Schema: sources.Schema, Sources: make(map[string]yae.Source, len(sources.Sources))}
-
-		for name, source := range sources.Sources {
-			pending.Sources[name] = source
-		}
 
 		for _, name := range names {
 			log.Infof("checking %s", name)
@@ -63,7 +58,7 @@ func Update(sources *yae.Environment) func(context *cli.Context) error {
 			}
 
 			if updated != source {
-				pending.Sources[name] = updated
+				sources.Sources[name] = updated
 				updates = append(updates, name)
 			}
 		}
@@ -72,11 +67,9 @@ func Update(sources *yae.Environment) func(context *cli.Context) error {
 			if context.Bool("dry-run") {
 				log.Infof("would update %s", strings.Join(updates, ", "))
 			} else {
-				if err := pending.Save(context.String("sources")); err != nil {
+				if err := sources.Save(context.String("sources")); err != nil {
 					return err
 				}
-
-				*sources = pending
 
 				log.Infof("updated %s", strings.Join(updates, ", "))
 			}

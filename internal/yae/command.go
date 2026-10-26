@@ -20,9 +20,8 @@ func command(context context.Context, name string, arguments ...string) (string,
 	process.Stderr = &stderr
 	process.WaitDelay = time.Second
 
-	if name == "git" {
-		process.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	}
+	// Git must fail instead of waiting for credentials that nobody will type.
+	process.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 
 	log.Debugf("running %s", name)
 

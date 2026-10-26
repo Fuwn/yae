@@ -51,11 +51,7 @@ func (source Source) Update(context context.Context, rehash bool) (Source, error
 	return source, nil
 }
 
-func (source *Source) fetchLatestGitTag(context context.Context) (string, error) {
-	if source.Type != "git" {
-		return "", fmt.Errorf("source is not a git repository")
-	}
-
+func (source Source) fetchLatestGitTag(context context.Context) (string, error) {
 	repository, err := repositoryURL(source.URL)
 
 	if err != nil {
@@ -77,7 +73,7 @@ func (source *Source) fetchLatestGitTag(context context.Context) (string, error)
 	for _, line := range strings.Split(strings.TrimSpace(output), "\n") {
 		fields := strings.Fields(line)
 
-		if len(fields) != 2 || !strings.HasPrefix(fields[1], "refs/tags/") || strings.HasSuffix(fields[1], "^{}") {
+		if len(fields) != 2 {
 			continue
 		}
 
@@ -96,7 +92,7 @@ func (source *Source) fetchLatestGitTag(context context.Context) (string, error)
 		return version, nil
 	}
 
-	return "", fmt.Errorf("no remote tags match tag_predicate")
+	return "", fmt.Errorf("no remote tags match tag_predicate; use a binary source to follow a branch")
 }
 
 func repositoryURL(address string) (string, error) {
@@ -109,15 +105,18 @@ func repositoryURL(address string) (string, error) {
 	segments := strings.Split(strings.Trim(parsed.Path, "/"), "/")
 	repositoryEnd := len(segments)
 
-	for index, segment := range segments {
-		if index >= 2 && (segment == "archive" || segment == "releases" || segment == "-") {
+	for index := 2; index < len(segments); index++ {
+		if segments[index] == "archive" || segments[index] == "releases" || segments[index] == "-" {
 			repositoryEnd = index
 
 			break
 		}
 	}
 
-	if repositoryEnd < 2 || (repositoryEnd == len(segments) && repositoryEnd != 2) {
+	hasDownloadMarker := repositoryEnd < len(segments)
+	isRepositoryPath := len(segments) == 2
+
+	if !hasDownloadMarker && !isRepositoryPath {
 		return "", fmt.Errorf("cannot infer repository: use an archive or release download URL")
 	}
 

@@ -143,6 +143,7 @@ func TestInvalidArgumentsPreserveFile(t *testing.T) {
 		{"update", "one", "two"}, {"update", "absent"}, {"drop", "absent"},
 		{"add", "--type", "binary", "$schema", "https://example.test/file"},
 		{"add", "--type", "git", "missing-version", "https://example.test/owner/repo/archive/v1"},
+		{"add", "--type", "binary", "unfilled", "https://example.test/{version}"},
 	} {
 		if _, _, err := runCLI(t, path, arguments...); err == nil {
 			t.Fatalf("accepted invalid arguments: %v", arguments)

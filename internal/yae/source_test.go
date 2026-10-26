@@ -35,8 +35,7 @@ func TestLatestGitTag(t *testing.T) {
 		failure   bool
 		want      string
 	}{
-		{name: "tags only", output: "abc\trefs/heads/zzbranch\nabc\trefs/tags/v10\nabc\trefs/tags/v2\n", want: "v10"},
-		{name: "annotated tags", output: "abc\trefs/tags/v10^{}\nabc\trefs/tags/v10", want: "v10"},
+		{name: "first listed tag", output: "abc\trefs/tags/v10\nabc\trefs/tags/v2\n", want: "v10"},
 		{name: "nested tag", output: "abc\trefs/tags/release/v2\n", want: "release/v2"},
 		{name: "filter before trimming", output: "abc\trefs/tags/v2-beta\nabc\trefs/tags/v1\n", predicate: "^v[0-9]+$", prefix: "v", want: "1"},
 		{name: "no tags"},
@@ -153,6 +152,12 @@ func TestGitVersionOrderingWithLocalRepository(t *testing.T) {
 
 	if err != nil || version != "v10" {
 		t.Fatalf("latest tag = %q, error = %v", version, err)
+	}
+
+	source.TagPredicate = "^zzbranch$"
+
+	if _, err := source.fetchLatestGitTag(context.Background()); err == nil || !strings.Contains(err.Error(), "binary source") {
+		t.Fatalf("branch predicate did not explain the binary alternative: %v", err)
 	}
 }
 

@@ -73,6 +73,16 @@ func TestInvalidStoredSources(t *testing.T) {
 	}
 }
 
+func TestUnfilledVersionPlaceholder(t *testing.T) {
+	source := validSource()
+
+	source.URL = "https://example.test/{version}/file"
+
+	if err := source.ValidateConfiguration(); err == nil {
+		t.Fatal("url with an unfilled {version} accepted")
+	}
+}
+
 func TestValidationFailurePreservesFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sources.json")
 	environment := Environment{Sources: map[string]Source{"invalid": {}}}

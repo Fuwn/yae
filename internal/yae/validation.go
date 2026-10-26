@@ -28,6 +28,10 @@ func (source Source) ValidateConfiguration() error {
 		return fmt.Errorf("url must use HTTP, HTTPS, or a local file")
 	}
 
+	if source.Version == "" && strings.Contains(source.URL, "{version}") {
+		return fmt.Errorf("url contains {version} but no version is set")
+	}
+
 	if source.Version != "" || source.URLTemplate != "" {
 		if source.Version == "" || !strings.Contains(source.URLTemplate, "{version}") {
 			return fmt.Errorf("version and url_template containing {version} must be supplied together")
