@@ -4,25 +4,17 @@ Yae is a powerful yet minimal dependency manager intended for use with Nix,
 which functions similar to [niv](https://github.com/nmattia/niv/) and [`npins`](https://github.com/andir/npins/).
 
 <details closed>
-  <summary>Why should I consider Yae over niv or <code>npins</code>?</summary>
+  <summary>How does Yae differ from niv and <code>npins</code>?</summary>
 
-  1. No unnecessary helper Nix expressions are needed by Yae.
+  1. Yae needs no helper Nix expressions.
 
-     niv and `npins` spit out medium-to-large sized Nix expressions that vary in
-     complexity in the form of a file that you need to keep in sync with their
-     mainline sources. This requires additional upgrade commands in the CLI and
-     more effort to maintain. A Yae environment is a single file and can be placed
-     anywhere and read just as simply.
+     niv and `npins` generate Nix expressions that you keep in sync with their
+     mainline sources. A Yae environment is a single JSON file that can be placed
+     anywhere and read with `builtins.fromJSON`.
   2. Yae has a small, coherent source tree focused on fetching sources and
      updating their versions and hashes.
-  3. Yae is simple by nature in design and usage philosophy.
-
-     niv and `npins` are great, but are far too ~~overkill~~ overengineered for me
-     and many other consumers. I say overengineered because I was able to write out
-     Yae's initial implementation in just about thirty-minutes to an hour, and it
-     was already complete enough for me to replace niv or `npins` in all of my production
-     workflows. If you need some niche feature that niv or `npins` has, use them,
-     but if not, Yae is here for you.
+  3. If you need a niche feature that niv or `npins` has, use them; if not, Yae
+     is here for you.
 
 </details>
 
@@ -86,6 +78,10 @@ yae update zen-browser-twilight-bin
 
 Use `--pin` when adding a source to prevent version and content updates.
 
+`git` sources follow remote tags. To follow a branch, add a `binary` source whose
+URL names the branch (for example, `--version main` with an
+`archive/{version}.tar.gz` URL); every `yae update` then recomputes its hashes.
+
 ## Installation
 
 You can either install Yae through the flake that this repository exposes or
@@ -93,7 +89,7 @@ through [Tsutsumi](https://github.com/Fuwn/tsutsumi).
 
 [Tsutsumi](https://github.com/Fuwn/tsutsumi) provides both flake and flake-less installation
 options, while this repository only provides installation support through flakes
-using the exported `inputs.yae.packages.${pkgs.system}.yae` package.
+using the exported `inputs.yae.packages.${system}.yae` package.
 
 <details closed>
   <summary>Click here to see a minimal Nix flake that exposes a development shell with Yae bundled.</summary>
@@ -109,10 +105,14 @@ using the exported `inputs.yae.packages.${pkgs.system}.yae` package.
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { nixpkgs, tsutsumi, self }:
-    let pkgs = import nixpkgs { inherit self; }; in {
-      devShells.${pkgs.system}.default = pkgs.mkShell {
-        buildInputs = [ tsutsumi.packages.${pkgs.system}.yae ];
+  outputs = { nixpkgs, tsutsumi, ... }:
+    let
+      pkgs = import nixpkgs { };
+      inherit (pkgs.stdenv.hostPlatform) system;
+    in
+    {
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [ tsutsumi.packages.${system}.yae ];
       };
     };
 }
@@ -132,79 +132,35 @@ of Yae managing different sources including Nixpkgs!
 
 #### Real-world Example
 
-Here's an example snippet taken from Tsutsumi's [`zen-browser-bin` package](https://github.com/Fuwn/tsutsumi/blob/main/pkgs/zen-browser-bin.nix)
-and [`yae.json`](https://github.com/Fuwn/tsutsumi/blob/main/yae.json#L59-L67)
-showcasing Yae in action.
+Tsutsumi reads its [`yae.json`](https://github.com/Fuwn/tsutsumi/blob/main/yae.json)
+once in its [`flake.nix`](https://github.com/Fuwn/tsutsumi/blob/main/flake.nix)
+and passes each source's fields straight to the standard fetchers.
 
 <details closed>
   <summary>Expand this!</summary>
 
 ```nix
-# pkgs/zen-browser-bin.nix
+# flake.nix (simplified excerpt)
+yae = builtins.fromJSON (builtins.readFile "${self}/yae.json");
 
-# This expression produces the `zen-browser-bin` package that Tsutsumi exposes
-# as a Nix package derivation.
-#
-# Since it is managed by Yae, it is kept 100% up to date with zero effort through
-# a Github Actions CRON job workflow that executes `yae update` periodically.
-{
-  pkgs,
-  self,
-  # This line imports Yae's environment configuration to be used below.
-  yae ? builtins.fromJSON (builtins.readFile "${self}/yae.json"),
-}:
-# Tsutsumi exposes two versions of the Zen browser, the latest stable release
-# and the latest Twilight release (a bleeding edge, daily build). This library
-# function is one that takes one of two Yae sources for the Zen browser, and produces
-# a Nix package derivation for it.
-import "${self}/lib/zen-browser-bin.nix" {
-  # Here, the latest SHA256 hash and release version from Yae are passed to Tsutsumi's
-  # Zen browser package function.
-  #
-  # If `yae update` is ran and a new release is detected, these values are
-  # updated by Yae, which then triggers another workflow to build and send the
-  # resulting derivation to Tsutsumi's binary cache.
-  inherit (yae.zen-browser-bin) sha256 version;
-
-  # To generate the Twilight release package, this is all that is changed.
-  # inherit (yae.zen-browser-twilight-bin) sha256 version;
-} { inherit pkgs; }
+# Every Yae source carries a URL and an SRI hash, which is exactly what
+# `fetchzip` needs.
+yaePackage =
+  name:
+  let
+    archive = pkgs.fetchzip {
+      inherit (yae.${name}) url hash;
+    };
+  in
+  ((import "${archive}/flake.nix").outputs { inherit nixpkgs; self = archive; })
+  .packages.${system}.default;
 ```
+
+A scheduled GitHub Actions workflow runs
+`yae --silent update --output-formatted-updated-list` and uses the printed list,
+such as `maple, rui, & yae`, as its commit message.
 
 </details>
-
-## `--help`
-
-```text
-NAME:
-   yae - Nix Dependency Manager
-
-USAGE:
-   yae [global options] command [command options]
-
-DESCRIPTION:
-   Nix Dependency Manager
-
-AUTHOR:
-   Fuwn <contact@fuwn.me>
-
-COMMANDS:
-   init     Initialise a new Yae environment
-   add      Add a source
-   drop     Drop a source
-   update   Update one or all sources
-   help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --sources value  Sources path (default: "./yae.json")
-   --debug          Enable debug output (default: false)
-   --silent         Only log errors (default: false)
-   --dry-run        Preview changes without saving the sources file (downloads may still populate the Nix store) (default: false)
-   --help, -h       show help
-
-COPYRIGHT:
-   Copyright (c) 2024-2025 Fuwn
-```
 
 ## Licence
 
@@ -212,5 +168,5 @@ Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
 [MIT license](LICENSE-MIT) at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+for inclusion in this project by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
