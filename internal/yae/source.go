@@ -24,7 +24,7 @@ type Source struct {
 
 func (source Source) Update(context context.Context, forceHash bool, forcePinned bool) (Source, error) {
 	if source.Pinned && !forcePinned {
-		return source.repairHash(context)
+		return source.repairHash(), nil
 	}
 
 	if source.Type == "git" {
@@ -35,7 +35,7 @@ func (source Source) Update(context context.Context, forceHash bool, forcePinned
 		}
 
 		if tag == source.Version && !forceHash && !source.Force {
-			return source.repairHash(context)
+			return source.repairHash(), nil
 		}
 
 		source.Version = tag
@@ -140,30 +140,16 @@ func (source *Source) RefreshHashes(context context.Context) error {
 		return err
 	}
 
-	hash, err := fetchSRIHash(context, sha256)
-
-	if err != nil {
-		return err
-	}
-
 	source.SHA256 = sha256
-	source.Hash = hash
+	source.Hash = sriHash(sha256)
 
 	return nil
 }
 
-func (source Source) repairHash(context context.Context) (Source, error) {
-	if source.Hash != "" {
-		return source, nil
+func (source Source) repairHash() Source {
+	if source.Hash == "" {
+		source.Hash = sriHash(source.SHA256)
 	}
 
-	hash, err := fetchSRIHash(context, source.SHA256)
-
-	if err != nil {
-		return Source{}, err
-	}
-
-	source.Hash = hash
-
-	return source, nil
+	return source
 }

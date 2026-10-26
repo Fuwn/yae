@@ -18,9 +18,7 @@ func validSource() Source {
 func fakeNix(t *testing.T) {
 	t.Helper()
 
-	for name, output := range map[string]string{"nix-prefetch-url": testSHA256, "nix": testSRIHash} {
-		fakeCommand(t, name, "printf '%s\\n' '"+output+"'")
-	}
+	fakeCommand(t, "nix-prefetch-url", "printf '%s\\n' '"+testSHA256+"'")
 }
 
 func TestInvalidStoredSources(t *testing.T) {

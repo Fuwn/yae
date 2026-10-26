@@ -32,7 +32,7 @@ func TestPackagedRuntime(t *testing.T) {
 		"PATH": "", "HOME": root,
 		"NIX_REMOTE":   "local?root=" + filepath.Join(root, "nix"),
 		"NIX_CONF_DIR": filepath.Join(root, "config"), "NIX_USER_CONF_FILES": "",
-		"NIX_CONFIG":          "experimental-features = nix-command\nbuild-users-group =\n",
+		"NIX_CONFIG":          "build-users-group =\n",
 		"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.DevNull,
 	} {
 		t.Setenv(name, value)

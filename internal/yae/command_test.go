@@ -53,31 +53,3 @@ func TestCommandCancellation(t *testing.T) {
 		t.Fatalf("command did not cancel promptly: %v", err)
 	}
 }
-
-func TestHashOutputValidation(t *testing.T) {
-	for _, output := range []string{"", "invalid", testSHA256 + "\nextra", testSHA256, testSHA256 + "\n"} {
-		t.Run(output, func(t *testing.T) {
-			fakeCommand(t, "nix-prefetch-url", "printf '%s' \"$YAE_TEST_HASH\"")
-			t.Setenv("YAE_TEST_HASH", output)
-
-			hash, err := fetchSHA256(context.Background(), "https://example.test/file", false)
-			valid := strings.TrimSpace(output) == testSHA256
-
-			if (err == nil) != valid || (valid && hash != testSHA256) {
-				t.Fatalf("hash = %q, error = %v", hash, err)
-			}
-		})
-	}
-}
-
-func TestFailedHashConversionLeavesSourceUnchanged(t *testing.T) {
-	fakeNix(t)
-	fakeCommand(t, "nix", "printf 'invalid'")
-
-	source := validSource()
-	original := source
-
-	if err := source.RefreshHashes(context.Background()); err == nil || source != original {
-		t.Fatalf("failed conversion changed source: %#v, %v", source, err)
-	}
-}

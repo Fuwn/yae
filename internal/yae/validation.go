@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var sha256Pattern = regexp.MustCompile(`^[01][0123456789abcdfghijklmnpqrsvwxyz]{51}$`)
-
 func (source Source) Validate() error {
 	if source.Type != "git" && (source.TagPredicate != "" || source.TrimTagPrefix != "" || source.Force) {
 		return fmt.Errorf("tag_predicate, trim_tag_prefix, and force require a git source")

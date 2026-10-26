@@ -48,7 +48,6 @@ func installFixtureCommands(t *testing.T) {
 	directory := t.TempDir()
 	commands := map[string]string{
 		"git":              "printf 'abc\\trefs/tags/v2\\n'",
-		"nix":              "printf '%s\\n' '" + fixtureSRIHash + "'",
 		"nix-prefetch-url": "case \"$*\" in *fail*) printf 'fetch failed' >&2; exit 23;; esac\nprintf '%s\\n' '" + fixtureSHA256 + "'",
 	}
 
