@@ -53,7 +53,7 @@ func TestSchema(t *testing.T) {
 
 	for field, value := range map[string]any{
 		"type": "unsupported", "sha256": "invalid", "hash": "sha256-invalid",
-		"unpack": nil, "future_option": true,
+		"unpack": nil, "future_option": true, "force": true,
 	} {
 		invalid := read("examples/nixpkgs/yae.json")
 
@@ -67,7 +67,6 @@ func TestSchema(t *testing.T) {
 	legacy := read("examples/nixpkgs/yae.json")
 	source := legacy["nixpkgs"].(map[string]any)
 
-	source["force"] = true
 	source["trim_tag_prefix"] = "v"
 	source["tag_predicate"] = "^v"
 

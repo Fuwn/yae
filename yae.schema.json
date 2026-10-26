@@ -57,9 +57,6 @@
       },
       "pinned": {
         "type": "boolean"
-      },
-      "force": {
-        "type": "boolean"
       }
     },
     "dependencies": {
@@ -70,46 +67,23 @@
         "version"
       ]
     },
-    "allOf": [
-      {
-        "if": {
-          "properties": {
-            "type": {
-              "const": "git"
-            }
-          }
-        },
-        "then": {
-          "required": [
-            "version",
-            "url_template"
-          ],
-          "properties": {
-            "url": {
-              "pattern": "^https?://"
-            }
-          }
-        }
-      },
-      {
-        "if": {
-          "required": [
-            "pinned"
-          ],
-          "properties": {
-            "pinned": {
-              "const": true
-            }
-          }
-        },
-        "then": {
-          "properties": {
-            "force": {
-              "const": false
-            }
-          }
+    "if": {
+      "properties": {
+        "type": {
+          "const": "git"
         }
       }
-    ]
+    },
+    "then": {
+      "required": [
+        "version",
+        "url_template"
+      ],
+      "properties": {
+        "url": {
+          "pattern": "^https?://"
+        }
+      }
+    }
   }
 }

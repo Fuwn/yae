@@ -19,11 +19,13 @@ type Source struct {
 	TagPredicate  string `json:"tag_predicate,omitempty"`
 	TrimTagPrefix string `json:"trim_tag_prefix,omitempty"`
 	Pinned        bool   `json:"pinned,omitempty"`
-	Force         bool   `json:"force,omitempty"`
 }
 
-func (source Source) Update(context context.Context, forceHash bool, forcePinned bool) (Source, error) {
-	if source.Pinned && !forcePinned {
+// Update returns the source with its latest version and hashes. Pinned sources
+// are returned unchanged, and a git source whose latest tag is its current
+// version is only refetched when rehash is set.
+func (source Source) Update(context context.Context, rehash bool) (Source, error) {
+	if source.Pinned {
 		return source.repairHash(), nil
 	}
 
@@ -34,7 +36,7 @@ func (source Source) Update(context context.Context, forceHash bool, forcePinned
 			return Source{}, err
 		}
 
-		if tag == source.Version && !forceHash && !source.Force {
+		if tag == source.Version && !rehash {
 			return source.repairHash(), nil
 		}
 

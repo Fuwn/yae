@@ -162,29 +162,21 @@ func TestUpdatePolicies(t *testing.T) {
 		kind        string
 		version     string
 		pinned      bool
-		persistent  bool
-		forceHash   bool
-		forcePinned bool
+		rehash      bool
 		fetch       bool
 		wantVersion string
 	}{
 		{name: "floating URL", kind: "binary", fetch: true},
 		{name: "pinned URL", kind: "binary", pinned: true},
-		{name: "forced pinned URL", kind: "binary", pinned: true, forcePinned: true, fetch: true},
 		{name: "unchanged tag", kind: "git", version: "v2", wantVersion: "v2"},
 		{name: "new tag", kind: "git", version: "v1", fetch: true, wantVersion: "v2"},
-		{name: "persistent rehash", kind: "git", version: "v2", persistent: true, fetch: true, wantVersion: "v2"},
-		{name: "requested rehash", kind: "git", version: "v2", forceHash: true, fetch: true, wantVersion: "v2"},
-		{name: "pin overrides rehash", kind: "git", version: "v1", pinned: true, forceHash: true, wantVersion: "v1"},
-		{name: "override pin", kind: "git", version: "v1", pinned: true, forcePinned: true, fetch: true, wantVersion: "v2"},
-		{name: "pin override alone skips unchanged tag", kind: "git", version: "v2", pinned: true, forcePinned: true, wantVersion: "v2"},
-		{name: "both overrides", kind: "git", version: "v2", pinned: true, forcePinned: true, forceHash: true, fetch: true, wantVersion: "v2"},
+		{name: "requested rehash", kind: "git", version: "v2", rehash: true, fetch: true, wantVersion: "v2"},
+		{name: "pin overrides rehash", kind: "git", version: "v1", pinned: true, rehash: true, wantVersion: "v1"},
 	}
 
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			fakeGit(t, "abc\trefs/tags/v2\n", false)
-			fakeNix(t)
 
 			marker := filepath.Join(t.TempDir(), "prefetched")
 
@@ -195,7 +187,6 @@ func TestUpdatePolicies(t *testing.T) {
 
 			source.Type = test.kind
 			source.Pinned = test.pinned
-			source.Force = test.persistent
 
 			if test.kind == "git" {
 				source.Version = test.version
@@ -203,7 +194,7 @@ func TestUpdatePolicies(t *testing.T) {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", test.version)
 			}
 
-			updated, err := source.Update(context.Background(), test.forceHash, test.forcePinned)
+			updated, err := source.Update(context.Background(), test.rehash)
 
 			if err != nil || updated.Version != test.wantVersion {
 				t.Fatalf("updated = %#v, error = %v", updated, err)

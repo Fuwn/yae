@@ -42,7 +42,7 @@ func TestInvalidStoredSources(t *testing.T) {
 		"bad url":          {"url": "relative/path"},
 		"credentials":      {"url": "https://user:password@example.test/file"},
 		"missing template": {"type": "git", "version": "v1"},
-		"conflicting pin":  {"pinned": true, "force": true},
+		"removed force":    {"force": true},
 		"mismatched url":   {"version": "v1", "url_template": "https://example.test/{version}"},
 	}
 
@@ -131,7 +131,7 @@ func TestUpdateRepairsLegacyHash(t *testing.T) {
 			fakeGit(t, "abc\trefs/tags/v1\n", false)
 
 			source := Source{URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", Version: "v1", Type: "git", SHA256: testSHA256, Pinned: test.pinned}
-			updated, err := source.Update(context.Background(), false, false)
+			updated, err := source.Update(context.Background(), false)
 
 			if err != nil || updated.Hash != testSRIHash || updated.SHA256 != testSHA256 || updated.Version != "v1" {
 				t.Fatalf("legacy repair failed: %#v, %v, %v", source, updated, err)
@@ -141,13 +141,11 @@ func TestUpdateRepairsLegacyHash(t *testing.T) {
 }
 
 func TestLegacyBinaryOptionsRoundTrip(t *testing.T) {
-	for _, option := range []string{"force", "trim_tag_prefix", "tag_predicate"} {
+	for _, option := range []string{"trim_tag_prefix", "tag_predicate"} {
 		t.Run(option, func(t *testing.T) {
 			source := validSource()
 
 			switch option {
-			case "force":
-				source.Force = true
 			case "trim_tag_prefix":
 				source.TrimTagPrefix = "v"
 			case "tag_predicate":

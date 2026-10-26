@@ -36,10 +36,6 @@ func AddFlags() []cli.Flag {
 			Name:  "pin",
 			Usage: "Prevent the source from being updated",
 		},
-		&cli.BoolFlag{
-			Name:  "force",
-			Usage: "Always force update the source, regardless of unchanged remote tag",
-		},
 	}
 }
 
@@ -63,7 +59,6 @@ func Add(sources *yae.Environment) func(context *cli.Context) error {
 			TagPredicate:  context.String("tag-predicate"),
 			TrimTagPrefix: context.String("trim-tag-prefix"),
 			Pinned:        context.Bool("pin"),
-			Force:         context.Bool("force"),
 		}
 
 		if source.Version != "" {

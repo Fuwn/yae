@@ -9,8 +9,8 @@ import (
 )
 
 func (source Source) Validate() error {
-	if source.Type != "git" && (source.TagPredicate != "" || source.TrimTagPrefix != "" || source.Force) {
-		return fmt.Errorf("tag_predicate, trim_tag_prefix, and force require a git source")
+	if source.Type != "git" && (source.TagPredicate != "" || source.TrimTagPrefix != "") {
+		return fmt.Errorf("tag_predicate and trim_tag_prefix require a git source")
 	}
 
 	return source.validateConfiguration()
@@ -33,10 +33,6 @@ func (source Source) validateConfiguration() error {
 		}
 	} else if (address.Scheme != "https" && address.Scheme != "http") || address.Hostname() == "" {
 		return fmt.Errorf("url must use HTTP, HTTPS, or a local file")
-	}
-
-	if source.Pinned && source.Force {
-		return fmt.Errorf("source cannot be both pinned and forced")
 	}
 
 	if source.Version != "" || source.URLTemplate != "" {

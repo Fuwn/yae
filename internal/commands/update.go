@@ -22,11 +22,7 @@ func UpdateFlags() []cli.Flag {
 		},
 		&cli.BoolFlag{
 			Name:  "force-hashed",
-			Usage: "Force updates for non-pinned sources that have an unchanged version (recalculate hash)",
-		},
-		&cli.BoolFlag{
-			Name:  "force-pinned",
-			Usage: "Force updates for all sources, including pinned sources (can be used with --force-hashed)",
+			Usage: "Refetch non-pinned git sources even when their version is unchanged",
 		},
 	}
 }
@@ -60,7 +56,7 @@ func Update(sources *yae.Environment) func(context *cli.Context) error {
 			log.Infof("checking %s", name)
 
 			source := sources.Sources[name]
-			updated, err := source.Update(context.Context, context.Bool("force-hashed"), context.Bool("force-pinned"))
+			updated, err := source.Update(context.Context, context.Bool("force-hashed"))
 
 			if err != nil {
 				return fmt.Errorf("source %q: %w", name, err)
