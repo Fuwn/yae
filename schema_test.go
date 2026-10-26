@@ -63,14 +63,4 @@ func TestSchema(t *testing.T) {
 			t.Fatalf("schema accepted invalid %s", field)
 		}
 	}
-
-	legacy := read("examples/nixpkgs/yae.json")
-	source := legacy["nixpkgs"].(map[string]any)
-
-	source["trim_tag_prefix"] = "v"
-	source["tag_predicate"] = "^v"
-
-	if err := schema.Validate(legacy); err != nil {
-		t.Fatal(err)
-	}
 }

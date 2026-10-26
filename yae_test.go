@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -121,7 +120,7 @@ func TestCommandLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if readSources(t, path).Exists("binary") {
+	if _, exists := readSources(t, path).Sources["binary"]; exists {
 		t.Fatal("dropped source remains")
 	}
 }
@@ -264,31 +263,5 @@ func TestUpdateIsOrderedAndFailureDoesNotSave(t *testing.T) {
 		} else if err != nil || output != "alpha\nzulu\n" {
 			t.Fatalf("unordered update: %q, %v", output, err)
 		}
-	}
-}
-
-func TestPinnedLegacyHashRepair(t *testing.T) {
-	installFixtureCommands(t)
-
-	path := filepath.Join(t.TempDir(), "sources.json")
-	source := yae.Source{URL: "https://example.test/file", Type: "binary", SHA256: fixtureSHA256, Pinned: true}
-	data, err := json.Marshal(map[string]yae.Source{"pinned": source})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(path, data, 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, _, err := runCLI(t, path, "update"); err != nil {
-		t.Fatal(err)
-	}
-
-	updated := readSources(t, path).Sources["pinned"]
-
-	if updated.Hash != fixtureSRIHash || updated.SHA256 != source.SHA256 || !updated.Pinned || updated.URL != source.URL {
-		t.Fatalf("repair changed pinned source: %#v", updated)
 	}
 }

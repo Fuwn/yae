@@ -39,7 +39,7 @@ func Update(sources *yae.Environment) func(context *cli.Context) error {
 			for name := range sources.Sources {
 				names = append(names, name)
 			}
-		} else if !sources.Exists(names[0]) {
+		} else if _, exists := sources.Sources[names[0]]; !exists {
 			return fmt.Errorf("source %q does not exist", names[0])
 		}
 

@@ -18,53 +18,35 @@ func (environment Environment) CheckNewName(name string) error {
 		return err
 	}
 
-	if environment.Exists(name) {
+	if _, exists := environment.Sources[name]; exists {
 		return fmt.Errorf("source %q already exists", name)
 	}
 
 	return nil
 }
 
-func (environment *Environment) Add(name string, source Source) error {
-	if err := environment.CheckNewName(name); err != nil {
-		return err
-	}
-
-	if err := source.validateStored(); err != nil {
-		return fmt.Errorf("source %q: %w", name, err)
-	}
-
-	if environment.Sources == nil {
-		environment.Sources = make(map[string]Source)
-	}
-
-	environment.Sources[name] = source
-
-	return nil
-}
-
-func (environment Environment) Exists(name string) bool {
-	_, exists := environment.Sources[name]
-
-	return exists
-}
-
-func (environment *Environment) Drop(name string) {
-	delete(environment.Sources, name)
-}
-
-func (environment *Environment) Save(path string) error {
-	contents := make(map[string]any, len(environment.Sources)+1)
-
+func (environment Environment) validate() error {
 	for name, source := range environment.Sources {
 		if err := validateName(name); err != nil {
 			return err
 		}
 
-		if err := source.validateStored(); err != nil {
+		if err := source.validate(); err != nil {
 			return fmt.Errorf("source %q: %w", name, err)
 		}
+	}
 
+	return nil
+}
+
+func (environment *Environment) Save(path string) error {
+	if err := environment.validate(); err != nil {
+		return err
+	}
+
+	contents := make(map[string]any, len(environment.Sources)+1)
+
+	for name, source := range environment.Sources {
 		contents[name] = source
 	}
 
@@ -140,18 +122,10 @@ func (environment *Environment) Load(path string) error {
 		return err
 	}
 
-	if contents == nil {
-		return fmt.Errorf("environment must be a JSON object")
-	}
-
 	loaded := Environment{Sources: make(map[string]Source, len(contents))}
 
 	for name, data := range contents {
 		if name == "$schema" {
-			if bytes.Equal(bytes.TrimSpace(data), []byte("null")) {
-				return fmt.Errorf("$schema must be a string")
-			}
-
 			if err := json.Unmarshal(data, &loaded.Schema); err != nil {
 				return fmt.Errorf("invalid $schema: %w", err)
 			}
@@ -169,25 +143,11 @@ func (environment *Environment) Load(path string) error {
 			return fmt.Errorf("source %q: %w", name, err)
 		}
 
-		var fields map[string]json.RawMessage
+		loaded.Sources[name] = source
+	}
 
-		if err := json.Unmarshal(data, &fields); err != nil {
-			return fmt.Errorf("source %q: %w", name, err)
-		}
-
-		if _, exists := fields["unpack"]; !exists {
-			return fmt.Errorf("source %q: missing unpack", name)
-		}
-
-		for field, value := range fields {
-			if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
-				return fmt.Errorf("source %q: null %s", name, field)
-			}
-		}
-
-		if err := loaded.Add(name, source); err != nil {
-			return err
-		}
+	if err := loaded.validate(); err != nil {
+		return err
 	}
 
 	*environment = loaded

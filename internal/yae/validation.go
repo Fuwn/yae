@@ -1,22 +1,15 @@
 package yae
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
 )
 
-func (source Source) Validate() error {
-	if source.Type != "git" && (source.TagPredicate != "" || source.TrimTagPrefix != "") {
-		return fmt.Errorf("tag_predicate and trim_tag_prefix require a git source")
-	}
-
-	return source.validateConfiguration()
-}
-
-func (source Source) validateConfiguration() error {
+// ValidateConfiguration checks everything about a source except its hashes, so
+// a new source can be rejected before anything is downloaded.
+func (source Source) ValidateConfiguration() error {
 	if source.Type != "binary" && source.Type != "git" {
 		return fmt.Errorf("type must be 'binary' or 'git'")
 	}
@@ -45,25 +38,31 @@ func (source Source) validateConfiguration() error {
 		}
 	}
 
-	if source.Type == "git" {
-		if source.Version == "" {
-			return fmt.Errorf("git source requires version and url_template")
+	if source.Type == "binary" {
+		if source.TagPredicate != "" || source.TrimTagPrefix != "" {
+			return fmt.Errorf("tag_predicate and trim_tag_prefix require a git source")
 		}
 
-		if _, err := repositoryURL(source.URL); err != nil {
-			return err
-		}
+		return nil
+	}
 
-		if _, err := regexp.Compile(source.TagPredicate); err != nil {
-			return fmt.Errorf("invalid tag_predicate: %w", err)
-		}
+	if source.Version == "" {
+		return fmt.Errorf("git source requires version and url_template")
+	}
+
+	if _, err := repositoryURL(source.URL); err != nil {
+		return err
+	}
+
+	if _, err := regexp.Compile(source.TagPredicate); err != nil {
+		return fmt.Errorf("invalid tag_predicate: %w", err)
 	}
 
 	return nil
 }
 
-func (source Source) validateStored() error {
-	if err := source.validateConfiguration(); err != nil {
+func (source Source) validate() error {
+	if err := source.ValidateConfiguration(); err != nil {
 		return err
 	}
 
@@ -71,22 +70,8 @@ func (source Source) validateStored() error {
 		return fmt.Errorf("sha256 must be a 52-character Nix base32 SHA-256 hash")
 	}
 
-	if source.Hash == "" {
-		return nil
-	}
-
-	return validateSRIHash(source.Hash)
-}
-
-func validateSRIHash(hash string) error {
-	if !strings.HasPrefix(hash, "sha256-") {
-		return fmt.Errorf("hash must be a SHA-256 SRI hash")
-	}
-
-	decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(hash, "sha256-"))
-
-	if err != nil || len(decoded) != 32 || "sha256-"+base64.StdEncoding.EncodeToString(decoded) != hash {
-		return fmt.Errorf("hash must be a SHA-256 SRI hash")
+	if source.Hash != sriHash(source.SHA256) {
+		return fmt.Errorf("hash must be the SRI form of sha256")
 	}
 
 	return nil

@@ -13,15 +13,17 @@ func Drop(sources *yae.Environment) func(context *cli.Context) error {
 			return fmt.Errorf("drop requires exactly one source name")
 		}
 
-		if !sources.Exists(context.Args().Get(0)) {
-			return fmt.Errorf("source does not exist")
+		name := context.Args().First()
+
+		if _, exists := sources.Sources[name]; !exists {
+			return fmt.Errorf("source %q does not exist", name)
 		}
 
 		if context.Bool("dry-run") {
 			return nil
 		}
 
-		sources.Drop(context.Args().Get(0))
+		delete(sources.Sources, name)
 
 		return sources.Save(context.String("sources"))
 	}

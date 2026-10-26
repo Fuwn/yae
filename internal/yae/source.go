@@ -26,7 +26,7 @@ type Source struct {
 // version is only refetched when rehash is set.
 func (source Source) Update(context context.Context, rehash bool) (Source, error) {
 	if source.Pinned {
-		return source.repairHash(), nil
+		return source, nil
 	}
 
 	if source.Type == "git" {
@@ -37,7 +37,7 @@ func (source Source) Update(context context.Context, rehash bool) (Source, error
 		}
 
 		if tag == source.Version && !rehash {
-			return source.repairHash(), nil
+			return source, nil
 		}
 
 		source.Version = tag
@@ -146,12 +146,4 @@ func (source *Source) RefreshHashes(context context.Context) error {
 	source.Hash = sriHash(sha256)
 
 	return nil
-}
-
-func (source Source) repairHash() Source {
-	if source.Hash == "" {
-		source.Hash = sriHash(source.SHA256)
-	}
-
-	return source
 }

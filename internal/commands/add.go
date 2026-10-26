@@ -66,7 +66,7 @@ func Add(sources *yae.Environment) func(context *cli.Context) error {
 			source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 		}
 
-		if err := source.Validate(); err != nil {
+		if err := source.ValidateConfiguration(); err != nil {
 			return err
 		}
 
@@ -78,9 +78,7 @@ func Add(sources *yae.Environment) func(context *cli.Context) error {
 			return nil
 		}
 
-		if err := sources.Add(name, source); err != nil {
-			return err
-		}
+		sources.Sources[name] = source
 
 		return sources.Save(context.String("sources"))
 	}

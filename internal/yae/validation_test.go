@@ -1,7 +1,6 @@
 package yae
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -15,35 +14,28 @@ func validSource() Source {
 	return Source{URL: "https://example.test/file", SHA256: testSHA256, Hash: testSRIHash, Type: "binary", Unpack: true}
 }
 
-func fakeNix(t *testing.T) {
-	t.Helper()
-
-	fakeCommand(t, "nix-prefetch-url", "printf '%s\\n' '"+testSHA256+"'")
-}
-
 func TestInvalidStoredSources(t *testing.T) {
 	cases := map[string]string{
-		"null environment": `null`,
-		"null schema":      `{"$schema":null}`,
-		"reserved name":    `{"$schema":{}}`,
-		"null source":      `{"sample":null}`,
-		"invalid schema":   `{"$schema":false}`,
-		"trailing object":  `{} {}`,
-		"invalid source":   `{"sample":false}`,
-		"missing unpack":   `{"sample":{"url":"https://example.test/file","type":"binary","sha256":"` + testSHA256 + `"}}`,
+		"reserved name":   `{"$schema":{}}`,
+		"null source":     `{"sample":null}`,
+		"invalid schema":  `{"$schema":false}`,
+		"trailing object": `{} {}`,
+		"invalid source":  `{"sample":false}`,
 	}
 	changes := map[string]map[string]any{
-		"unknown field":    {"future_option": true},
-		"unknown type":     {"type": "other"},
-		"bad sha256":       {"sha256": "invalid"},
-		"bad sri":          {"hash": "sha256-invalid"},
-		"null bool":        {"unpack": nil},
-		"null optional":    {"pinned": nil},
-		"bad url":          {"url": "relative/path"},
-		"credentials":      {"url": "https://user:password@example.test/file"},
-		"missing template": {"type": "git", "version": "v1"},
-		"removed force":    {"force": true},
-		"mismatched url":   {"version": "v1", "url_template": "https://example.test/{version}"},
+		"unknown field":      {"future_option": true},
+		"removed force":      {"force": true},
+		"unknown type":       {"type": "other"},
+		"bad sha256":         {"sha256": "invalid"},
+		"bad sri":            {"hash": "sha256-invalid"},
+		"missing sri":        {"hash": ""},
+		"mismatched sri":     {"hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},
+		"bad url":            {"url": "relative/path"},
+		"credentials":        {"url": "https://user:password@example.test/file"},
+		"missing template":   {"type": "git", "version": "v1"},
+		"mismatched url":     {"version": "v1", "url_template": "https://example.test/{version}"},
+		"binary tag options": {"tag_predicate": "^v"},
+		"binary tag prefix":  {"trim_tag_prefix": "v"},
 	}
 
 	for name, fields := range changes {
@@ -81,22 +73,6 @@ func TestInvalidStoredSources(t *testing.T) {
 	}
 }
 
-func TestAddInitializesMapAndRejectsReservedName(t *testing.T) {
-	environment := Environment{}
-
-	if err := environment.Add("$schema", validSource()); err == nil {
-		t.Fatal("reserved name accepted")
-	}
-
-	if err := environment.Add("sample", validSource()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := environment.Add("sample", validSource()); err == nil {
-		t.Fatal("duplicate name accepted")
-	}
-}
-
 func TestValidationFailurePreservesFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sources.json")
 	environment := Environment{Sources: map[string]Source{"invalid": {}}}
@@ -113,67 +89,5 @@ func TestValidationFailurePreservesFile(t *testing.T) {
 
 	if err != nil || string(data) != "original" {
 		t.Fatalf("file was changed: %q, %v", data, err)
-	}
-}
-
-func TestUpdateRepairsLegacyHash(t *testing.T) {
-	cases := []struct {
-		name   string
-		pinned bool
-	}{
-		{name: "unchanged version"},
-		{name: "pinned", pinned: true},
-	}
-
-	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
-			fakeNix(t)
-			fakeGit(t, "abc\trefs/tags/v1\n", false)
-
-			source := Source{URL: "https://example.test/owner/repo/archive/v1", URLTemplate: "https://example.test/owner/repo/archive/{version}", Version: "v1", Type: "git", SHA256: testSHA256, Pinned: test.pinned}
-			updated, err := source.Update(context.Background(), false)
-
-			if err != nil || updated.Hash != testSRIHash || updated.SHA256 != testSHA256 || updated.Version != "v1" {
-				t.Fatalf("legacy repair failed: %#v, %v, %v", source, updated, err)
-			}
-		})
-	}
-}
-
-func TestLegacyBinaryOptionsRoundTrip(t *testing.T) {
-	for _, option := range []string{"trim_tag_prefix", "tag_predicate"} {
-		t.Run(option, func(t *testing.T) {
-			source := validSource()
-
-			switch option {
-			case "trim_tag_prefix":
-				source.TrimTagPrefix = "v"
-			case "tag_predicate":
-				source.TagPredicate = "^v"
-			}
-
-			if err := source.Validate(); err == nil {
-				t.Fatal("new binary source accepted irrelevant options")
-			}
-
-			path := filepath.Join(t.TempDir(), "sources.json")
-			original := Environment{Sources: map[string]Source{"legacy": source}}
-
-			if err := original.Save(path); err != nil {
-				t.Fatal(err)
-			}
-
-			var loaded Environment
-
-			if err := loaded.Load(path); err != nil || loaded.Sources["legacy"] != source {
-				t.Fatalf("legacy source changed: %#v, %v", loaded, err)
-			}
-
-			loaded.Drop("legacy")
-
-			if err := loaded.Save(path); err != nil {
-				t.Fatal(err)
-			}
-		})
 	}
 }

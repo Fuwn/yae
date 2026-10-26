@@ -14,6 +14,7 @@
     "required": [
       "url",
       "sha256",
+      "hash",
       "unpack",
       "type"
     ],
@@ -29,8 +30,7 @@
       },
       "hash": {
         "type": "string",
-        "pattern": "^(|sha256-[A-Za-z0-9+/]{43}=)$",
-        "description": "New sources contain an SRI hash. Update repairs empty or missing legacy hashes."
+        "pattern": "^sha256-[A-Za-z0-9+/]{43}=$"
       },
       "unpack": {
         "type": "boolean"
