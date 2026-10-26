@@ -28,19 +28,11 @@ func main() {
 
 func newApp() *cli.App {
 	sources := yae.Environment{}
-	loadSources := func(context *cli.Context) error {
-		if err := sources.Load(context.String("sources")); os.IsNotExist(err) {
-			return fmt.Errorf("sources file is missing; run yae init to create it")
-		} else {
-			return err
-		}
-	}
 
 	return &cli.App{
 		Name:                 "yae",
 		Version:              Version,
 		Usage:                "Nix Dependency Manager",
-		Description:          "Nix Dependency Manager",
 		EnableBashCompletion: true,
 		Authors: []*cli.Author{
 			{
@@ -83,37 +75,10 @@ func newApp() *cli.App {
 		Copyright: fmt.Sprintf("Copyright (c) 2024-%d Fuwn", time.Now().Year()),
 		Suggest:   true,
 		Commands: []*cli.Command{
-			{
-				Name:   "init",
-				Usage:  "Initialise a new Yae environment",
-				Action: commands.Init(&sources),
-			},
-			{
-				Name:      "add",
-				Args:      true,
-				ArgsUsage: "<name> <url>",
-				Usage:     "Add a source",
-				Flags:     commands.AddFlags(),
-				Before:    loadSources,
-				Action:    commands.Add(&sources),
-			},
-			{
-				Name:      "drop",
-				ArgsUsage: "<name>",
-				Args:      true,
-				Usage:     "Drop a source",
-				Before:    loadSources,
-				Action:    commands.Drop(&sources),
-			},
-			{
-				Name:      "update",
-				Args:      true,
-				Usage:     "Update one or all sources",
-				ArgsUsage: "[name]",
-				Flags:     commands.UpdateFlags(),
-				Before:    loadSources,
-				Action:    commands.Update(&sources),
-			},
+			commands.Init(),
+			commands.Add(&sources),
+			commands.Drop(&sources),
+			commands.Update(&sources),
 		},
 	}
 }
