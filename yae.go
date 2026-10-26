@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/Fuwn/yae/internal/commands"
 	"github.com/Fuwn/yae/internal/yae"
-	"github.com/charmbracelet/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,11 +18,13 @@ var Version string
 
 func main() {
 	context, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	err := newApp().RunContext(context, os.Args)
 
-	defer stop()
+	stop()
 
-	if err := newApp().RunContext(context, os.Args); err != nil {
-		log.Fatal(err.Error())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "yae:", err)
+		os.Exit(1)
 	}
 }
 
@@ -41,15 +43,19 @@ func newApp() *cli.App {
 			},
 		},
 		Before: func(context *cli.Context) error {
-			log.SetLevel(log.InfoLevel)
+			level := slog.LevelInfo
 
 			if context.Bool("debug") {
-				log.SetLevel(log.DebugLevel)
+				level = slog.LevelDebug
 			}
 
 			if context.Bool("silent") {
-				log.SetLevel(log.ErrorLevel)
+				level = slog.LevelError
 			}
+
+			handler := slog.NewTextHandler(context.App.ErrWriter, &slog.HandlerOptions{Level: level, ReplaceAttr: omitTime})
+
+			slog.SetDefault(slog.New(handler))
 
 			return nil
 		},
@@ -81,4 +87,12 @@ func newApp() *cli.App {
 			commands.Update(&sources),
 		},
 	}
+}
+
+func omitTime(groups []string, attribute slog.Attr) slog.Attr {
+	if len(groups) == 0 && attribute.Key == slog.TimeKey {
+		return slog.Attr{}
+	}
+
+	return attribute
 }

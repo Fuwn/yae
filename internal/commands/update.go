@@ -2,11 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
 	"github.com/Fuwn/yae/internal/yae"
-	"github.com/charmbracelet/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -51,7 +51,7 @@ func Update(sources *yae.Environment) *cli.Command {
 			updates := []string{}
 
 			for _, name := range names {
-				log.Infof("checking %s", name)
+				slog.Info("checking", "source", name)
 
 				source := sources.Sources[name]
 				updated, err := source.Update(context.Context, context.Bool("force-hashed"))
@@ -68,13 +68,13 @@ func Update(sources *yae.Environment) *cli.Command {
 
 			if len(updates) > 0 {
 				if context.Bool("dry-run") {
-					log.Infof("would update %s", strings.Join(updates, ", "))
+					slog.Info("would update", "sources", strings.Join(updates, ", "))
 				} else {
 					if err := sources.Save(context.String("sources")); err != nil {
 						return err
 					}
 
-					log.Infof("updated %s", strings.Join(updates, ", "))
+					slog.Info("updated", "sources", strings.Join(updates, ", "))
 				}
 			}
 

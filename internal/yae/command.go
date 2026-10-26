@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/charmbracelet/log"
 )
 
 func command(context context.Context, name string, arguments ...string) (string, error) {
@@ -23,7 +22,7 @@ func command(context context.Context, name string, arguments ...string) (string,
 	// Git must fail instead of waiting for credentials that nobody will type.
 	process.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 
-	log.Debugf("running %s", name)
+	slog.Debug("running", "command", name)
 
 	output, err := process.Output()
 

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/Fuwn/yae/internal/yae"
-	"github.com/charmbracelet/log"
 )
 
 const fixtureSHA256 = "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy"
@@ -20,11 +19,6 @@ func runCLI(t *testing.T, path string, arguments ...string) (string, string, err
 	t.Helper()
 
 	var output, diagnostics bytes.Buffer
-
-	log.SetOutput(&diagnostics)
-
-	defer log.SetOutput(os.Stderr)
-
 	application := newApp()
 
 	application.Writer = &output
@@ -197,7 +191,7 @@ func TestDryRunPreservesFiles(t *testing.T) {
 	}
 }
 
-func TestBooleanLoggingFlags(t *testing.T) {
+func TestLoggingLevels(t *testing.T) {
 	installFixtureCommands(t)
 
 	path := filepath.Join(t.TempDir(), "sources.json")
@@ -211,21 +205,20 @@ func TestBooleanLoggingFlags(t *testing.T) {
 	}
 
 	cases := []struct {
-		flag  string
+		flags []string
 		info  bool
 		debug bool
 	}{
-		{flag: "--debug=false", info: true},
-		{flag: "--silent=false", info: true},
-		{flag: "--debug", info: true, debug: true},
-		{flag: "--silent"},
+		{info: true},
+		{flags: []string{"--debug"}, info: true, debug: true},
+		{flags: []string{"--silent"}},
 	}
 
 	for _, test := range cases {
-		_, diagnostics, err := runCLI(t, path, test.flag, "update")
+		_, diagnostics, err := runCLI(t, path, append(test.flags, "update")...)
 
-		if err != nil || strings.Contains(diagnostics, "checking sample") != test.info || strings.Contains(diagnostics, "running nix") != test.debug {
-			t.Fatalf("%s: diagnostics = %q, error = %v", test.flag, diagnostics, err)
+		if err != nil || strings.Contains(diagnostics, "msg=checking source=sample") != test.info || strings.Contains(diagnostics, "command=nix-prefetch-url") != test.debug {
+			t.Fatalf("%v: diagnostics = %q, error = %v", test.flags, diagnostics, err)
 		}
 	}
 }
@@ -258,7 +251,7 @@ func TestUpdateIsOrderedAndFailureDoesNotSave(t *testing.T) {
 		if failing {
 			data, readError := os.ReadFile(path)
 
-			if err == nil || output != "" || strings.Contains(diagnostics, "updated ") || readError != nil || !bytes.Equal(original, data) {
+			if err == nil || output != "" || strings.Contains(diagnostics, "msg=updated") || readError != nil || !bytes.Equal(original, data) {
 				t.Fatalf("failed update published changes: %q, %q, %v, %v", output, diagnostics, err, readError)
 			}
 		} else if err != nil || output != "alpha\nzulu\n" {

@@ -42,7 +42,7 @@
           pname = name;
           version = "2025.11.29";
           src = pkgs.lib.cleanSource ./.;
-          vendorHash = "sha256-TSpb8oiLdVlBpUCAlRXx+LQt8ZcZZslId02hP3qRRlA=";
+          vendorHash = "sha256-CAQbD3gfKCUoB7nT7i/4J2ymkua+LmFT0CDAqoHX4AA=";
           env.CGO_ENABLED = 0;
           nativeBuildInputs = [ pkgs.makeWrapper ];
           nativeCheckInputs = [
