@@ -7,9 +7,7 @@ import (
 	"strings"
 )
 
-// ValidateConfiguration checks everything about a source except its hashes, so
-// a new source can be rejected before anything is downloaded.
-func (source Source) ValidateConfiguration() error {
+func (source Source) ValidateWithoutHashes() error {
 	if source.Type != "binary" && source.Type != "git" {
 		return fmt.Errorf("type must be 'binary' or 'git'")
 	}
@@ -66,7 +64,7 @@ func (source Source) ValidateConfiguration() error {
 }
 
 func (source Source) validate() error {
-	if err := source.ValidateConfiguration(); err != nil {
+	if err := source.ValidateWithoutHashes(); err != nil {
 		return err
 	}
 

@@ -171,7 +171,7 @@ func TestUpdatePolicies(t *testing.T) {
 			marker := filepath.Join(t.TempDir(), "prefetched")
 
 			t.Setenv("YAE_TEST_PREFETCH", marker)
-			fixture.Command(t, "nix-prefetch-url", "printf fetched > \"$YAE_TEST_PREFETCH\"\nprintf '%s\\n' '"+fixture.SHA256+"'")
+			fixture.FakeCommand(t, "nix-prefetch-url", "printf fetched > \"$YAE_TEST_PREFETCH\"\nprintf '%s\\n' '"+fixture.DigestSHA256+"'")
 
 			source := validSource()
 

@@ -11,7 +11,7 @@ import (
 )
 
 func TestCommandFailureIncludesDiagnostics(t *testing.T) {
-	fixture.Command(t, "git", "printf 'remote unavailable' >&2\nexit 23")
+	fixture.FakeCommand(t, "git", "printf 'remote unavailable' >&2\nexit 23")
 
 	_, err := command(context.Background(), "git", "ls-remote")
 
@@ -21,7 +21,7 @@ func TestCommandFailureIncludesDiagnostics(t *testing.T) {
 }
 
 func TestCommandCancellation(t *testing.T) {
-	fixture.Command(t, "git", "while :; do :; done")
+	fixture.FakeCommand(t, "git", "while :; do :; done")
 
 	context, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 

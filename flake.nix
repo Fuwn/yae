@@ -106,12 +106,11 @@
             sha256=1n8lvnnjp3g8a2bj9msjxibi7sjfq9570vyyjr6pl6wi4xqxrbdx
             hash=sha256-va3ccSeRG3pNlt5vcErCTuoTV+xS1ySXUOiNK63dFNk=
 
-            # An empty PATH proves that the wrapper supplies Git and Nix.
-            yae() { PATH= ${yae}/bin/yae --sources "$sources" "$@"; }
+            yae_with_empty_path() { PATH= ${yae}/bin/yae --sources "$sources" "$@"; }
 
-            yae init
+            yae_with_empty_path init
             printf 'first payload' > "$TMPDIR/payload"
-            yae add --type binary --unpack=false sample "file://$TMPDIR/payload"
+            yae_with_empty_path add --type binary --unpack=false sample "file://$TMPDIR/payload"
             grep -qF "\"hash\": \"$hash\"" "$sources"
 
             git init --quiet --bare "$repository"
@@ -123,7 +122,7 @@
               https://example.test/owner/repository/archive/v10 \
               'https://example.test/owner/repository/archive/{version}' \
               "$sha256" "$hash" > "$sources"
-            test -z "$(yae update --output-updated-list)"
+            test -z "$(yae_with_empty_path update --output-updated-list)"
             touch "$out"
           '';
 

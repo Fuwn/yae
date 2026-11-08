@@ -21,10 +21,7 @@ type Source struct {
 	Pinned        bool   `json:"pinned,omitempty"`
 }
 
-// Update returns the source with its latest version and hashes. Pinned sources
-// are returned unchanged, and a git source whose latest tag is its current
-// version is only refetched when rehash is set.
-func (source Source) Update(context context.Context, rehash bool) (Source, error) {
+func (source Source) Update(context context.Context, refetchUnchangedTag bool) (Source, error) {
 	if source.Pinned {
 		return source, nil
 	}
@@ -36,7 +33,7 @@ func (source Source) Update(context context.Context, rehash bool) (Source, error
 			return Source{}, err
 		}
 
-		if tag == source.Version && !rehash {
+		if tag == source.Version && !refetchUnchangedTag {
 			return source, nil
 		}
 

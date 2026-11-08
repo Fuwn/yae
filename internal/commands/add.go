@@ -69,7 +69,7 @@ func Add(sources *yae.Environment) *cli.Command {
 				source.URL = strings.ReplaceAll(source.URLTemplate, "{version}", source.Version)
 			}
 
-			if err := source.ValidateConfiguration(); err != nil {
+			if err := source.ValidateWithoutHashes(); err != nil {
 				return err
 			}
 

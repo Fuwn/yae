@@ -28,8 +28,8 @@ func runCLI(t *testing.T, path string, arguments ...string) (string, string, err
 
 func installFixtureCommands(t *testing.T) {
 	t.Helper()
-	fixture.Command(t, "git", "printf 'abc\\trefs/tags/v2\\n'")
-	fixture.Command(t, "nix-prefetch-url", "case \"$*\" in *fail*) printf 'fetch failed' >&2; exit 23;; esac\nprintf '%s\\n' '"+fixture.SHA256+"'")
+	fixture.FakeCommand(t, "git", "printf 'abc\\trefs/tags/v2\\n'")
+	fixture.FakeCommand(t, "nix-prefetch-url", "case \"$*\" in *fail*) printf 'fetch failed' >&2; exit 23;; esac\nprintf '%s\\n' '"+fixture.DigestSHA256+"'")
 }
 
 func readSources(t *testing.T, path string) yae.Environment {
@@ -72,7 +72,7 @@ func TestCommandLifecycle(t *testing.T) {
 	environment := readSources(t, path)
 
 	for name, source := range environment.Sources {
-		if source.SHA256 != fixture.SHA256 || source.Hash != fixture.SRIHash {
+		if source.SHA256 != fixture.DigestSHA256 || source.Hash != fixture.DigestSRIHash {
 			t.Fatalf("%s was added with incomplete hashes: %#v", name, source)
 		}
 	}

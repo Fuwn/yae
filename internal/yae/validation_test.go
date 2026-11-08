@@ -36,7 +36,7 @@ func TestInvalidStoredSources(t *testing.T) {
 	for name, fields := range changes {
 		source := map[string]any{
 			"url": "https://example.test/file", "type": "binary", "unpack": true,
-			"sha256": fixture.SHA256, "hash": fixture.SRIHash,
+			"sha256": fixture.DigestSHA256, "hash": fixture.DigestSRIHash,
 		}
 
 		for field, value := range fields {
@@ -73,7 +73,7 @@ func TestUnfilledVersionPlaceholder(t *testing.T) {
 
 	source.URL = "https://example.test/{version}/file"
 
-	if err := source.ValidateConfiguration(); err == nil {
+	if err := source.ValidateWithoutHashes(); err == nil {
 		t.Fatal("url with an unfilled {version} accepted")
 	}
 }

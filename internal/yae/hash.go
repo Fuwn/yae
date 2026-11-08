@@ -34,9 +34,8 @@ func fetchSHA256(context context.Context, address string, unpack bool) (string, 
 	return hash, nil
 }
 
-// sriHash converts a Nix base32 SHA-256 hash to its SRI form. The input must
-// match sha256Pattern. Nix base32 stores the digest's bits little-endian,
-// starting from the final character.
+// Nix base32 stores the digest's bits little-endian, starting from the final
+// character.
 func sriHash(nixBase32 string) string {
 	var digest [32]byte
 

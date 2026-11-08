@@ -1,5 +1,3 @@
-// Package fixture provides fake external commands and a known hash pair for
-// tests.
 package fixture
 
 import (
@@ -9,15 +7,12 @@ import (
 	"testing"
 )
 
-// SHA256 and SRIHash are the Nix base32 and SRI forms of one real digest.
 const (
-	SHA256  = "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy"
-	SRIHash = "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI="
+	DigestSHA256  = "1wn29537l343lb0id0byk0699fj0k07m1n2d7jx2n0ssax55vhwy"
+	DigestSRIHash = "sha256-nsNdSldaAyu6PE3YUA+YQLqUDJh+gRbBooMMekZJwvI="
 )
 
-// Command places a shell script called name at the front of PATH for the rest
-// of the test.
-func Command(t testing.TB, name string, body string) {
+func FakeCommand(t testing.TB, name string, body string) {
 	t.Helper()
 
 	shell, err := exec.LookPath("sh")
